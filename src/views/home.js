@@ -2,15 +2,59 @@ import React from 'react'
 
 import Script from 'dangerous-html/react'
 import { Helmet } from 'react-helmet'
+import { useState, useEffect} from 'react'
+import abi from "../contracts/test.json"
+//import './App.css';
+import { ethers } from "ethers"
 
 import './home.css'
+import Loginsystem from "./login"
 
 const Home = (props) => {
+  const [state, setState] = useState({
+    provider: null,
+    signer: null,
+    contract: null,
+    account: null
+  })
+  const [isConnected, setConnection] = useState(false);
+  const [connectmsg, setMsg] = useState("Connect Wallet")
+  const connectWallet = async () => { 
+    const contractAddress = "0xFF6446B43C247A846B32373451C82edca6f0cbF4"
+    const contractAbi = abi.abi
+    try{
+      const {ethereum} = window;
+      if(ethereum){
+        ethereum.on('chainChanged', () => {
+          window.location.reload();
+        })
+        ethereum.on('accountsChanged', () => {
+          window.location.reload();
+        })
+        const account = await ethereum.request({method: "eth_requestAccounts",});
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+        const signer = provider.getSigner();
+      
+        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
+        
+        setState({provider, signer, contract, account});
+        setConnection(true);
+        setMsg(account[0]);
+        console.log(account);
+      }
+      
+    } catch(error){
+      console.log(error);
+    }
+  }
   return (
+    
     <div className="home-container">
+      
       <Helmet>
-        <title>Character NFT template</title>
-        <meta property="og:title" content="Character NFT template" />
+        <title>DeCAT</title>
+        <meta property="og:title" content="Dashboard" />
       </Helmet>
       <header data-thq="thq-navbar" className="home-navbar">
         <span className="home-logo">DeCAT</span>
@@ -52,7 +96,7 @@ const Home = (props) => {
               />
             </button>
           </div>
-          <button className="button">View on Opensea</button>
+          <button onClick={!isConnected && connectWallet} className="button">{connectmsg}</button>
         </div>
         <div data-thq="thq-burger-menu" className="home-burger-menu">
           <button className="button home-button5">
@@ -104,6 +148,7 @@ const Home = (props) => {
           </div>
         </div>
       </header>
+      {isConnected && <Loginsystem state={state}></Loginsystem>} 
       <section className="home-hero">
         <div className="home-heading">
           <h1 className="home-header">Leveraging Modified Soul Bound Tokens</h1>
@@ -113,7 +158,7 @@ const Home = (props) => {
           </p>
         </div>
         <div className="home-buttons">
-          <button className="button">View on Opensea</button>
+          <button onClick={!isConnected && connectWallet} className="button">{connectmsg}</button>
           <button className="home-learn button-clean button">Learn more</button>
         </div>
       </section>
