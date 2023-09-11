@@ -20,7 +20,7 @@ const Home = (props) => {
   const [isConnected, setConnection] = useState(false);
   const [connectmsg, setMsg] = useState("Connect Wallet")
   const connectWallet = async () => { 
-    const contractAddress = "0xFF6446B43C247A846B32373451C82edca6f0cbF4"
+    const contractAddress = "0xE68a6241a96d8b54F74394A23374a4C89C304fB6"
     const contractAbi = abi.abi
     try{
       const {ethereum} = window;
@@ -76,7 +76,6 @@ const Home = (props) => {
               Pricing
             </button>
             <button className="home-button3 button-clean button">Team</button>
-            <button className="home-button4 button-clean button">Blog</button>
           </nav>
         </div>
         <div data-thq="thq-navbar-btn-group" className="home-btn-group">
@@ -112,7 +111,7 @@ const Home = (props) => {
             className="home-nav1"
           >
             <div className="home-container1">
-              <span className="home-logo1">Character</span>
+              <span className="home-logo1">DeCAT</span>
               <div data-thq="thq-close-menu" className="home-menu-close">
                 <svg viewBox="0 0 1024 1024" className="home-icon02">
                   <path d="M810 274l-238 238 238 238-60 60-238-238-238 238-60-60 238-238-238-238 60-60 238 238 238-238z"></path>
@@ -172,16 +171,16 @@ const Home = (props) => {
           <div className="home-description01">
             <div className="home-content">
               <p className="home-paragraph">
-                We are a team of digital aute irure dolor in reprehenderit in
-                voluptate velit esse cillum dolore eu fugiat.
+                We are a team of web3 enthusiasts passionate about building Systems that would not only revolutionize the world
+                But also shape the world into a better future.
               </p>
               <p className="home-paragraph1">
-                Excepteur sint occaecat cupidatat non proident, sunt in culpa
-                qui officia deserunt mollit anim id est laborum. Nemo enim ipsam
-                voluptatem quia voluptas sit aspernatur aut odit aut fugit.
+                DeCAT is set to release on public blockchain Layer2. The first working model is set to be deployed on 
+                Polygon mumbai testnet. Why Polygon? Provides scalability enabling rollup mechanism which plays a critical role
+                in multibatch transactions.
               </p>
             </div>
-            <div className="home-links">
+            {/* <div className="home-links">
               <a
                 href="https://twitter.com"
                 target="_blank"
@@ -208,7 +207,7 @@ const Home = (props) => {
                   className="home-arrow1"
                 />
               </a>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>
@@ -224,12 +223,11 @@ const Home = (props) => {
             </div>
             <div className="home-main">
               <div className="home-content01">
-                <h2 className="home-header01">10,000+ unique characters</h2>
+                <h2 className="home-header01">70% of the Certificates are web2 based or paper based</h2>
                 <p className="home-description02">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliquat
-                  enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi
+                The project aims to tackle the problem of secure credential verification using SoulBound NFTs in a decentralized manner. 
+                By creating a Dapp with features for issuers to mint, manage, and verify NFTs, we intend to revolutionize how certificates and achievements are showcased and verified, 
+                enhancing their value and authenticity in the digital world.
                 </p>
               </div>
               <button className="home-learn1 button">
@@ -253,13 +251,13 @@ const Home = (props) => {
             <div className="home-main1">
               <div className="home-content02">
                 <h2 className="home-header02">
-                  Create yourself for the metaverse
+                  DeCAT : provides digital and decentralized certification authority
                 </h2>
                 <p className="home-description03">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliquat
-                  enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi
+                ensuring the authenticity and uniqueness of certificates, achievements, 
+                and credentials has become a critical concern. Traditional methods are susceptible to duplication and tampering, 
+                diminishing the value of these accolades. To address this issue, we aim to create a decentralized application (Dapp) that 
+                leverages modified ERC721 tokens inspired by SoulBound Tokens.
                 </p>
               </div>
               <button className="home-learn2 button">
@@ -285,13 +283,12 @@ const Home = (props) => {
             <div className="home-main2">
               <div className="home-content03">
                 <h2 className="home-header03">
-                  Create yourself for the metaverse
+                  Dive Deep into the world of Blockchain
                 </h2>
                 <p className="home-description04">
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliquat
-                  enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi
+                  Learn about Rollup mechanism, Layer protocols in Blockchain,
+                  Multi batch and bulk transaction processing 
+                  and many more research things.
                 </p>
               </div>
               <button className="home-learn3 button">
@@ -307,7 +304,7 @@ const Home = (props) => {
           </div>
         </div>
       </section>
-      <section className="home-collection">
+      {/* <section className="home-collection">
         <div className="home-content04">
           <span className="home-caption01">collection</span>
           <div className="home-heading01">
@@ -428,8 +425,8 @@ const Home = (props) => {
           </div>
         </div>
         <button className="home-view2 button-link button">View all</button>
-      </section>
-      <section className="home-project">
+      </section> */}
+      {/* <section className="home-project">
         <div className="home-understand">
           <div className="home-content13">
             <span className="home-caption10">Project</span>
@@ -485,8 +482,8 @@ const Home = (props) => {
             </button>
           </div>
         </div>
-      </section>
-      <section className="home-roadmap">
+      </section> */}
+      {/* <section className="home-roadmap">
         <div className="home-heading04">
           <h2 className="home-header10">Roadmap</h2>
           <p className="home-header11">
@@ -598,8 +595,8 @@ const Home = (props) => {
             </div>
           </div>
         </div>
-      </section>
-      <section className="home-join-us">
+      </section> */}
+      {/* <section className="home-join-us">
         <div className="home-content15">
           <div className="home-main4">
             <div className="home-heading09">
@@ -820,42 +817,8 @@ const Home = (props) => {
             </div>
           </div>
         </div>
-      </section>
-      <section className="home-get-yours">
-        <div className="home-row2">
-          <div className="home-column">
-            <div className="home-card11">
-              <img
-                alt="image"
-                src="/Characters/character-9.svg"
-                className="home-image30"
-              />
-            </div>
-          </div>
-          <div className="home-column1">
-            <div className="home-card12">
-              <img
-                alt="image"
-                src="/Characters/character-10.svg"
-                className="home-image31"
-              />
-            </div>
-          </div>
-        </div>
-        <div className="home-column2">
-          <div className="home-card13">
-            <div className="home-content21">
-              <h2 className="home-header30">Get yours now</h2>
-              <p className="home-description10">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliquat enim
-                ad minim veniam.
-              </p>
-            </div>
-            <button className="home-button7 button">View on Opensea</button>
-          </div>
-        </div>
-      </section>
+      </section> */}
+      
       <footer className="home-footer">
         <div className="home-main5">
           <div className="home-branding">
