@@ -3,11 +3,15 @@ import React from 'react'
 import Script from 'dangerous-html/react'
 import { Helmet } from 'react-helmet'
 import { useState, useEffect} from 'react'
+import { Redirect } from 'react-router-dom'
+import { useAppContext } from '../AppContext'
 import './home.css'
 
-const Loginsystem = (props) => {
-    const {state} = props;
-    const {account} = state;
+const Loginsystem = () => {
+    
+    const { state, setState } = useAppContext()
+    const { provider, signer, contract, account, authenticated } = state;
+    console.log(account)
     const [authorized, setAuth] = useState(0);
     const SignIn = async(event) => {
         event.preventDefault();
@@ -18,23 +22,31 @@ const Loginsystem = (props) => {
         console.log(contract, password, walletAddress);
         const contractwithsigner = contract.connect(signer);
         const resp = await contractwithsigner.getVal(walletAddress);
-        if(resp == password){setAuth(1);}
+        if(resp == password){
+            setAuth(1)
+            const authenticated = true;
+            setState({ provider, signer, contract, account, authenticated});
+            //sessionStorage.setItem(account[0], JSON.stringify(state));    
+            console.log('logged In');
+            console.log(account, authenticated);
+        }
         else{setAuth(2)}
+        event.target.reset()
     };
     return (<div>
     {authorized == 1 && 
-    <div data-thq="thq-close-menu" className="home-caption01">Wohooo!! You are Logged In
-    </div>
+    // <div data-thq="thq-close-menu" className="home-caption01">Wohooo!! You are Logged In
+    // </div> && 
+    <Redirect to="/decat" />
     }
 
     {authorized == 2 && 
     <div data-thq="thq-close-menu" className="home-caption01">Wrong credentials
     </div>
     }
-    <br></br>
     <form onSubmit={SignIn}>
          <label className='home-links' style={{color: "white"}}>Wallet Address</label>
-         <input type="url" id="walletaddress" value={account ? account[0]: ""} disabled style={{width: 300}} className="button"></input>
+         <input type="url" id="walletaddress" value={account ? account: ""} disabled style={{width: 300}} className="button"></input>
          <br></br><br></br>
          <label className='home-links' style={{color: "white"}}>Enter Password</label>
          <input type="password" id="password" placeholder="Enter Your Password" className='home-button7 button'></input>

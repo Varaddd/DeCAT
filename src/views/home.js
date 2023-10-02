@@ -1,57 +1,68 @@
-import React from 'react'
+import React from "react";
 
-import Script from 'dangerous-html/react'
-import { Helmet } from 'react-helmet'
-import { useState, useEffect} from 'react'
-import abi from "../contracts/test.json"
+import Script from "dangerous-html/react";
+import { Helmet } from "react-helmet";
+import { useState, useEffect } from "react";
+import { Redirect } from 'react-router-dom'
+import abi from "../contracts/test.json";
 //import './App.css';
-import { ethers } from "ethers"
+import { ethers } from "ethers";
 
-import './home.css'
-import Loginsystem from "./login"
+import "./home.css";
+import Loginsystem from "./login";
+import { useAppContext } from "../AppContext";
 
 const Home = (props) => {
-  const [state, setState] = useState({
-    provider: null,
-    signer: null,
-    contract: null,
-    account: null
-  })
+  // const [state, setState] = useState({
+  //   provider: null,
+  //   signer: null,
+  //   contract: null,
+  //   account: null,
+  //   authenticated: false,
+  // });
+  
+  
+  const { state, setState } = useAppContext()
+  const { provider, signer, contract, account, authenticated } = state;
   const [isConnected, setConnection] = useState(false);
-  const [connectmsg, setMsg] = useState("Connect Wallet")
-  const connectWallet = async () => { 
-    const contractAddress = "0xE68a6241a96d8b54F74394A23374a4C89C304fB6"
-    const contractAbi = abi.abi
-    try{
-      const {ethereum} = window;
-      if(ethereum){
-        ethereum.on('chainChanged', () => {
+  const [connectmsg, setMsg] = useState("Connect Wallet");
+  const connectWallet = async () => {
+    const contractAddress = "0x798dEd76b55aC40bDBc607BE0038Becf7074A26B";
+    const contractAbi = abi.abi;
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        ethereum.on("chainChanged", () => {
           window.location.reload();
-        })
-        ethereum.on('accountsChanged', () => {
+        });
+        ethereum.on("accountsChanged", () => {
           window.location.reload();
-        })
-        const account = await ethereum.request({method: "eth_requestAccounts",});
+        });
+        const accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const account = accounts[0];
         const provider = new ethers.providers.Web3Provider(window.ethereum);
 
         const signer = provider.getSigner();
-      
-        const contract = new ethers.Contract(contractAddress, contractAbi, signer);
-        
-        setState({provider, signer, contract, account});
+
+        const contract = new ethers.Contract(
+          contractAddress,
+          contractAbi,
+          signer
+        );
+        const authenticated = false;
+        console.log(account)
+        setState({ provider, signer, contract, account, authenticated });
         setConnection(true);
-        setMsg(account[0]);
-        console.log(account);
+        setMsg(account);
       }
-      
-    } catch(error){
+    } catch (error) {
       console.log(error);
     }
-  }
+  };
   return (
-    
     <div className="home-container">
-      
       <Helmet>
         <title>DeCAT</title>
         <meta property="og:title" content="Dashboard" />
@@ -95,7 +106,9 @@ const Home = (props) => {
               />
             </button>
           </div>
-          <button onClick={!isConnected && connectWallet} className="button">{connectmsg}</button>
+          <button onClick={!isConnected && connectWallet} className="button">
+            {connectmsg}
+          </button>
         </div>
         <div data-thq="thq-burger-menu" className="home-burger-menu">
           <button className="button home-button5">
@@ -147,7 +160,8 @@ const Home = (props) => {
           </div>
         </div>
       </header>
-      {isConnected && <Loginsystem state={state}></Loginsystem>} 
+      {isConnected && <Loginsystem></Loginsystem>}
+      
       <section className="home-hero">
         <div className="home-heading">
           <h1 className="home-header">Leveraging Modified Soul Bound Tokens</h1>
@@ -157,7 +171,9 @@ const Home = (props) => {
           </p>
         </div>
         <div className="home-buttons">
-          <button onClick={!isConnected && connectWallet} className="button">{connectmsg}</button>
+          <button onClick={!isConnected && connectWallet} className="button">
+            {connectmsg}
+          </button>
           <button className="home-learn button-clean button">Learn more</button>
         </div>
       </section>
@@ -171,13 +187,15 @@ const Home = (props) => {
           <div className="home-description01">
             <div className="home-content">
               <p className="home-paragraph">
-                We are a team of web3 enthusiasts passionate about building Systems that would not only revolutionize the world
-                But also shape the world into a better future.
+                We are a team of web3 enthusiasts passionate about building
+                Systems that would not only revolutionize the world But also
+                shape the world into a better future.
               </p>
               <p className="home-paragraph1">
-                DeCAT is set to release on public blockchain Layer2. The first working model is set to be deployed on 
-                Polygon mumbai testnet. Why Polygon? Provides scalability enabling rollup mechanism which plays a critical role
-                in multibatch transactions.
+                DeCAT is set to release on public blockchain Layer2. The first
+                working model is set to be deployed on Polygon mumbai testnet.
+                Why Polygon? Provides scalability enabling rollup mechanism
+                which plays a critical role in multibatch transactions.
               </p>
             </div>
             {/* <div className="home-links">
@@ -223,11 +241,16 @@ const Home = (props) => {
             </div>
             <div className="home-main">
               <div className="home-content01">
-                <h2 className="home-header01">70% of the Certificates are web2 based or paper based</h2>
+                <h2 className="home-header01">
+                  70% of the Certificates are web2 based or paper based
+                </h2>
                 <p className="home-description02">
-                The project aims to tackle the problem of secure credential verification using SoulBound NFTs in a decentralized manner. 
-                By creating a Dapp with features for issuers to mint, manage, and verify NFTs, we intend to revolutionize how certificates and achievements are showcased and verified, 
-                enhancing their value and authenticity in the digital world.
+                  The project aims to tackle the problem of secure credential
+                  verification using SoulBound NFTs in a decentralized manner.
+                  By creating a Dapp with features for issuers to mint, manage,
+                  and verify NFTs, we intend to revolutionize how certificates
+                  and achievements are showcased and verified, enhancing their
+                  value and authenticity in the digital world.
                 </p>
               </div>
               <button className="home-learn1 button">
@@ -251,13 +274,17 @@ const Home = (props) => {
             <div className="home-main1">
               <div className="home-content02">
                 <h2 className="home-header02">
-                  DeCAT : provides digital and decentralized certification authority
+                  DeCAT : provides digital and decentralized certification
+                  authority
                 </h2>
                 <p className="home-description03">
-                ensuring the authenticity and uniqueness of certificates, achievements, 
-                and credentials has become a critical concern. Traditional methods are susceptible to duplication and tampering, 
-                diminishing the value of these accolades. To address this issue, we aim to create a decentralized application (Dapp) that 
-                leverages modified ERC721 tokens inspired by SoulBound Tokens.
+                  ensuring the authenticity and uniqueness of certificates,
+                  achievements, and credentials has become a critical concern.
+                  Traditional methods are susceptible to duplication and
+                  tampering, diminishing the value of these accolades. To
+                  address this issue, we aim to create a decentralized
+                  application (Dapp) that leverages modified ERC721 tokens
+                  inspired by SoulBound Tokens.
                 </p>
               </div>
               <button className="home-learn2 button">
@@ -287,8 +314,8 @@ const Home = (props) => {
                 </h2>
                 <p className="home-description04">
                   Learn about Rollup mechanism, Layer protocols in Blockchain,
-                  Multi batch and bulk transaction processing 
-                  and many more research things.
+                  Multi batch and bulk transaction processing and many more
+                  research things.
                 </p>
               </div>
               <button className="home-learn3 button">
@@ -818,7 +845,7 @@ const Home = (props) => {
           </div>
         </div>
       </section> */}
-      
+
       <footer className="home-footer">
         <div className="home-main5">
           <div className="home-branding">
@@ -981,7 +1008,7 @@ const Home = (props) => {
         ></Script>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;
