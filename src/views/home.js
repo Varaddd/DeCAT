@@ -27,7 +27,7 @@ const Home = (props) => {
   const [isConnected, setConnection] = useState(false);
   const [connectmsg, setMsg] = useState("Connect Wallet");
   const connectWallet = async () => {
-    const contractAddress = "0x798dEd76b55aC40bDBc607BE0038Becf7074A26B";
+    const contractAddress = "0x428E1588cD8a3FA448c7539bfDB8354A143FDF09";
     const contractAbi = abi.abi;
     try {
       const { ethereum } = window;

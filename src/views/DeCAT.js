@@ -69,14 +69,14 @@ const DeCAT = () => {
         const contractwithsigner = contract.connect(signer);
         console.log('connected with contract');
         // Hash the path
-        const hashedPath = crypto.SHA256(ans.path).toString();
+        //const hashedPath = crypto.SHA256(ans.path).toString();
 
         // Convert the hashed path to bytes32
-        const newpath = ethers.utils.formatBytes32String('0x' + hashedPath);
+        //const newpath = ethers.utils.formatBytes32String('0x' + hashedPath);
         // Later, when you need the original path
-        const originalPath = crypto.enc.Hex.stringify(crypto.enc.Hex.parse(newpath.substring(2))); // Remove '0x' prefix
-        console.log(originalPath)
-        const resp = await contractwithsigner.safeMint(walletaddress, originalPath);
+        //const originalPath = crypto.enc.Hex.stringify(crypto.enc.Hex.parse(newpath.substring(2))); // Remove '0x' prefix
+        //console.log(originalPath)
+        const resp = await contractwithsigner.safeMint(walletaddress, ans.path);
         console.log(resp);
 
 
