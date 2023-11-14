@@ -14,16 +14,16 @@ const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
 const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
 const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
 
-const DeCAT = () => {
+const Multiple = () => {
     const { state, setState } = useAppContext() 
     const { provider, signer, contract, account, authenticated } = state;
     console.log(account, authenticated)
     const [file, setFile] = useState();
     const [file_name, setFilename] = useState();
-    // const [csv_file, setCsv] = useState();
-    // const [csv_file_name, setCsvname] = useState();
+    const [csv_file, setCsv] = useState();
+    const [csv_file_name, setCsvname] = useState();
     const [addressData, setAddressData] = useState([]);
-    const [send, setSend] = useState(0);
+    
     // const [uploadedImages, setUploadedImages] = useState();
     // const [Inputname, setName] = useState();
     // const [Inputdesc, setDesc] = useState();
@@ -33,24 +33,18 @@ const DeCAT = () => {
         setFile(event.target.files[0]);
         setFilename(event.target.files[0].name);
     };
-    // const handleCsv = (event) => {
-    //   setCsv(event.target.files[0]);
-    //   setCsvname(event.target.files[0].name);
-    //   Papa.parse(file, {
-    //       header: true,
-    //       skipEmptyLines: true,
-    //       dynamicTyping: true,
-    //       complete: (result) => {
-    //         // Assuming the address column is the second column (index 1) in the CSV.
-    //         const data = result.data;
-    //         if (data && data.length > 0) {
-    //           const addressColumn = data.map((row) => row['Address']); // Replace 'address' with the actual column name in your CSV
-    //           setAddressData(addressColumn);
-    //           console.log(data);
-    //     }
-    //   },
-    //   });
-    // }
+    const handleCsv = (event) => {
+        setCsv(event.target.files[0]);
+        setCsvname(event.target.files[0].name);
+        Papa.parse(file, {
+            complete: (result) => {
+              // Assuming the address column is the second column (index 1) in the CSV.
+              const addressColumn = result.data.map(row => row[1]);
+              setAddressData(addressColumn);
+            },
+            header: true, // Set to true if your CSV has headers
+        });
+    }
     const ipfs = ipfsHttpClient({
         url: "https://ipfs.infura.io:5001/api/v0",
         headers: {
@@ -65,11 +59,10 @@ const DeCAT = () => {
     } 
     const SendSBT = async(event) => {
         event.preventDefault();
-        const studentname = String(event.target.studentname.value);
+        
         const walletaddress = String(event.target.walletaddress.value);
         const name = String(event.target.name.value);
-        const description = String(event.target.description.value)+ `. This Certificate is owned by ${studentname}`;
-      
+        const description = String(event.target.description.value);
         //const images = event.target[0].files;
         console.log(walletaddress, name, description);
         // if (!images || images.length === 0) { 
@@ -90,9 +83,17 @@ const DeCAT = () => {
         console.log('uploaded data', ans.path);
         const contractwithsigner = contract.connect(signer);
         console.log('connected with contract');
+        // Hash the path
+        //const hashedPath = crypto.SHA256(ans.path).toString();
+
+        // Convert the hashed path to bytes32
+        //const newpath = ethers.utils.formatBytes32String('0x' + hashedPath);
+        // Later, when you need the original path
+        //const originalPath = crypto.enc.Hex.stringify(crypto.enc.Hex.parse(newpath.substring(2))); // Remove '0x' prefix
+        //console.log(originalPath)
         const resp = await contractwithsigner.safeMint(walletaddress, ans.path);
         console.log(resp);
-        setSend(1);
+
 
     }
     if (authenticated){
@@ -120,12 +121,12 @@ const DeCAT = () => {
                 className="home-nav"
               >
                 <button className="home-button button-clean button">About</button>
-                <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
-            <a href="/multiple" className="home-button2 button-clean button">
-              Multiple Transaction
-            </a>
+                <button className="home-button1 button-clean button">
+                  Features
+                </button>
+                <button className="home-button2 button-clean button">
+                  Pricing
+                </button>
                 <button className="home-button3 button-clean button">Team</button>
               </nav>
             </div>
@@ -179,12 +180,8 @@ const DeCAT = () => {
                   className="home-nav2"
                 >
                   <span className="home-text">About</span>
-                  <a  href="/decat" className="home-button1 button-clean button">
-                    Single Transaction
-                  </a>
-                  <a href="/multiple" className="home-button2 button-clean button">
-                    Multiple Transaction
-                  </a>
+                  <span className="home-text01">Features</span>
+                  <span className="home-text02">Pricing</span>
                   <span className="home-text03">Team</span>
                   <span className="home-text04">Blog</span>
                 </nav>
@@ -207,28 +204,18 @@ const DeCAT = () => {
             </div>
           </header>
           {/* {isConnected && <Loginsystem></Loginsystem>} */}
-          {send == 1 && 
-          <div data-thq="thq-close-menu" className="home-caption01">SBT has been SENT!
-          </div>
-          }
             <form onSubmit={SendSBT}>
               <label className='home-links' style={{color: "white"}}>Wallet Address</label>
               <input type="text" id="walletaddress" style={{width: 300}} className="button"></input>
               <br></br><br></br>
-              <label className='home-links' style={{color: "white"}}>Name of the Certificate Holder</label>
-              <input type="text" id="studentname" style={{width: 300}} className="button"></input>
-              <br></br><br></br>
               <label className='home-links' style={{color: "white"}}>Name your Certificate</label>
               <input type="text" id="name" placeholder="Enter Name" style={{width: 300}} className="button"></input>
-              <br></br><br></br>
               <label className='home-links' style={{color: "white"}}>Description</label>
               <input type="text" id="description" placeholder="Enter Description" style={{width: 300}} className="button"></input>
-              <br></br><br></br>
               <label className='home-links' style={{color: "white"}}>Upload Image</label>
               <input type="file" id="image" className='home-button7 button' onChange={handlePhotoSelect}></input>
-              <br></br><br></br>
-              {/* <label className='home-links' style={{color: "white"}}>Upload CSV</label>
-              <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input> */}
+              <label className='home-links' style={{color: "white"}}>Upload CSV</label>
+              <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input>
               <ul>
                 {addressData.map((address, index) => (
                     <li key={index}>{address}</li>
@@ -496,4 +483,4 @@ const DeCAT = () => {
     </div>
     )
 }
-export default DeCAT;
+export default Multiple;

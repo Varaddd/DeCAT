@@ -12,7 +12,7 @@ import "./home.css";
 import Loginsystem from "./login";
 import { useAppContext } from "../AppContext";
 
-const Home = (props) => {
+const Verify = () => {
   // const [state, setState] = useState({
   //   provider: null,
   //   signer: null,
@@ -26,11 +26,8 @@ const Home = (props) => {
   const { provider, signer, contract, account, authenticated } = state;
   const [isConnected, setConnection] = useState(false);
   const [connectmsg, setMsg] = useState("Connect Wallet");
-  const [addresses, setAddresses] = useState([]);
-  const [totalmints, setMints] = useState(0);
-  
   const connectWallet = async () => {
-    const contractAddress = "0x581aF0F29670d8Ca269A6deF3c513c953b504796";
+    const contractAddress = "0x428E1588cD8a3FA448c7539bfDB8354A143FDF09";
     const contractAbi = abi.abi;
     try {
       const { ethereum } = window;
@@ -59,34 +56,11 @@ const Home = (props) => {
         setState({ provider, signer, contract, account, authenticated });
         setConnection(true);
         setMsg(account);
-        const contractwithsigner = contract.connect(signer);
-        const resp = await contractwithsigner.getTotalMints();
-        const mints = resp.toNumber()
-        setMints(mints);
-        const values = await contractwithsigner.student_certificates("0xeFE06D73C547836fB79b95b3F889634319559fEb");
-        console.log(values.toNumber());
-
-        // async function getMints(){
-        //   const contractwithsigner = contract.connect(signer);
-        //   console.log('connected with contract');
-        //   const resp = await contractwithsigner.total_mints();
-        //   console.log(resp.toNumber());
-        //   setMints(resp.toNumber());
-        //   const resp1 = await contractwithsigner.getAddresses();
-        //   console.log(resp1);
-        //   setAddresses(resp1)
-        //   const resp2 = await contractwithsigner.getValues(resp1);
-        //   console.log(resp2);
-        // }
-        // getMints();
       }
     } catch (error) {
       console.log(error);
     }
   };
-  
-    
-  
   return (
     <div className="home-container">
       <Helmet>
@@ -106,15 +80,12 @@ const Home = (props) => {
             className="home-nav"
           >
             <button className="home-button button-clean button">About</button>
-            <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
-            <a href="/multiple" className="home-button2 button-clean button">
-              Multiple Transaction
-            </a>
-            <a href="/portfolio" className="home-button2 button-clean button">
-              Portfolio
-            </a>
+            <button className="home-button1 button-clean button">
+              Features
+            </button>
+            <button className="home-button2 button-clean button">
+              Pricing
+            </button>
             <button className="home-button3 button-clean button">Team</button>
           </nav>
         </div>
@@ -166,12 +137,8 @@ const Home = (props) => {
               className="home-nav2"
             >
               <span className="home-text">About</span>
-              <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
-            <a href="/multiple" className="home-button2 button-clean button">
-              Multiple Transaction
-            </a>
+              <span className="home-text01">Features</span>
+              <span className="home-text02">Pricing</span>
               <span className="home-text03">Team</span>
               <span className="home-text04">Blog</span>
             </nav>
@@ -193,10 +160,6 @@ const Home = (props) => {
           </div>
         </div>
       </header>
-      <div class="home-hero">
-      {isConnected && <label className='home-button7 button'>Total DeCAT NFT's Minted: {totalmints}
-      </label>}
-      </div>
       {isConnected && <Loginsystem></Loginsystem>}
       
       <section className="home-hero">
@@ -991,12 +954,61 @@ const Home = (props) => {
         </span>
       </footer>
       <div>
-        <Script>
-          
-        </Script>
+        <Script
+          html={`<script>
+ /*
+  Accordion - Code Embed
+  */
+  const accordionContainers = document.querySelectorAll('[data-role="accordion-container"]'); // All accordion containers
+  const accordionContents = document.querySelectorAll('[data-role="accordion-content"]'); // All accordion content
+  const accordionIconsClosed = document.querySelectorAll('[data-role="accordion-icon-closed"]'); // All accordion closed icons
+  const accordionIconsOpen = document.querySelectorAll('[data-role="accordion-icon-open"]'); // All accordion open icons
+
+  accordionContents.forEach((accordionContent) => {
+      accordionContent.style.display = "none"; //Hides all accordion contents
+  });
+
+  accordionIconsClosed.forEach((icon) => {
+    icon.style.display = "flex"
+  })
+
+  accordionIconsOpen.forEach((icon) => {
+    icon.style.display = "none"
+  })
+
+  accordionContainers.forEach((accordionContainer, index) => {
+      accordionContainer.addEventListener("click", () => {
+          if (accordionContents[index].style.display === "flex") {
+              // If the accordion is already open, close it
+              accordionContents[index].style.display = "none";
+              accordionIconsClosed[index].style.display = "flex";
+              accordionIconsOpen[index].style.display = "none"
+          } else {
+              // If the accordion is closed, open it
+              accordionContents.forEach((accordionContent) => {
+                  accordionContent.style.display = "none"; //Hides all accordion contents
+              });
+
+              accordionIconsClosed.forEach((accordionIcon) => {
+                  accordionIcon.style.display = "flex"; // Resets all icon transforms to 0deg (default)
+              });
+
+              accordionIconsOpen.forEach((accordionIcon) => {
+                accordionIcon.style.display = "none";
+              })
+              
+              accordionContents[index].style.display = "flex"; // Shows accordion content
+              accordionIconsClosed[index].style.display = "none"; // Rotates accordion icon 180deg
+              accordionIconsOpen[index].style.display = "flex";
+          }
+      });
+  });
+</script>
+`}
+        ></Script>
       </div>
     </div>
   );
 };
 
-export default Home;
+export default Verify;
