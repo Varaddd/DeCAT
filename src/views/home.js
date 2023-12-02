@@ -30,7 +30,7 @@ const Home = (props) => {
   const [totalmints, setMints] = useState(0);
   
   const connectWallet = async () => {
-    const contractAddress = "0x581aF0F29670d8Ca269A6deF3c513c953b504796";
+    const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
     const contractAbi = abi.abi;
     try {
       const { ethereum } = window;
@@ -63,8 +63,6 @@ const Home = (props) => {
         const resp = await contractwithsigner.getTotalMints();
         const mints = resp.toNumber()
         setMints(mints);
-        const values = await contractwithsigner.student_certificates("0xeFE06D73C547836fB79b95b3F889634319559fEb");
-        console.log(values.toNumber());
 
         // async function getMints(){
         //   const contractwithsigner = contract.connect(signer);
@@ -90,7 +88,7 @@ const Home = (props) => {
   return (
     <div className="home-container">
       <Helmet>
-        <title>DeCAT</title>
+        <title>Home</title>
         <meta property="og:title" content="Dashboard" />
       </Helmet>
       <header data-thq="thq-navbar" className="home-navbar">

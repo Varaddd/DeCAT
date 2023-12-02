@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@covalenthq/client-sdk": "^0.6.3",
     "@craco/craco": "^7.0.0-alpha.0",
+    "axios": "^1.6.1",
     "crypto": "^1.0.1",
     "crypto-browserify": "^3.12.0",
     "crypto-js": "^4.1.1",

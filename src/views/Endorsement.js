@@ -13,7 +13,7 @@ import "./home.css";
 // import { useAppContext } from "../AppContext";
 // import { CovalentClient } from "@covalenthq/client-sdk";
 
-const Portfolio = () => {
+const Endorsement = () => {
   // const { state, setState } = useAppContext()
   // const { provider, signer, contract, account, authenticated } = state;
   // const [isConnected, setConnection] = useState(false);
@@ -23,13 +23,12 @@ const Portfolio = () => {
   // const [totalmints, setMints] = useState(0);
   const [signer, setSigner] = useState();
   const [address_mints, setAddressMints] = useState("Please Enter an address first");
-  const [nft_data, setNFTData] = useState([]);
+  const [nft_data, setNFTData] = useState([])
   const [fetched_nftdata, setNFT] = useState(false);
-  const [loader, setLoader] = useState(false);
 
   useEffect(() => {
     const connectWallet = async () => {
-      const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
+      const contractAddress = "0xe8750E54151a8eA203ef65e0fB11230676b9b033";//"0x581aF0F29670d8Ca269A6deF3c513c953b504796";
       const contractAbi = abi.abi;
       try {
         const { ethereum } = window;
@@ -57,9 +56,9 @@ const Portfolio = () => {
           const authenticated = false;
           setNewContract(contract);
           setSigner(signer);
-          // setState({ provider, signer, contract, account, authenticated });
-          // setConnection(true);
-          // setMsg(account);
+          setState({ provider, signer, contract, account, authenticated });
+          setConnection(true);
+          setMsg(account);
         }
       } catch (error) {
         console.log(error);
@@ -79,7 +78,6 @@ const Portfolio = () => {
         // const client = new CovalentClient("cqt_rQt3xrBGR96Gg3bp7qk7vGJDQ8rV");
         // const response = await client.BalanceService.getTokenBalancesForWalletAddress("eth-sepolia",address, {"nft": true});
         // console.log(response.data["items"], response.data["items"].length);
-        setLoader(true);
         const nfts = await contractwithsigner.getTokenIdAccount(address);
         let nft_datas = []
         for(var i=0;i<nfts.length;i++){
@@ -90,10 +88,9 @@ const Portfolio = () => {
             nft_datas.push(metadata.data);
           });
         }
-        console.log(nft_datas);
+        console.log(nft_datas)
         setNFT(true);
         setNFTData(nft_datas);
-        setLoader(false);
     } else{alert("Please connect to you metamask wallet");}
     event.target.reset();
   }
@@ -239,7 +236,6 @@ const Portfolio = () => {
          <input type="text" id="walletaddress" style={{width: 300}} className="button"></input>
          <br></br><br></br>
          <button type="submit" className='home-button6 button'>Get NFT</button>
-         {loader && <div className="loader">Fetching SBT...</div>}
       </div>
     </form>
 
@@ -502,4 +498,4 @@ const Portfolio = () => {
   );
 };
 
-export default Portfolio;
+export default Endorsement;

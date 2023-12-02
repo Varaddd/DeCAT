@@ -105,7 +105,7 @@ const Multiple = () => {
     <div>
         <div className="home-container">
           <Helmet>
-            <title>DeCAT</title>
+            <title>Multiple Transaction</title>
             <meta property="og:title" content="Dashboard" />
           </Helmet>
           <header data-thq="thq-navbar" className="home-navbar">

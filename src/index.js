@@ -7,6 +7,7 @@ import Home from './views/home'
 import DeCAT from './views/DeCAT'
 import Verify from './views/Verify'
 import Portfolio from './views/Portfolio'
+import Endorsement from './views/Endorsement'
 import { AppProvider } from './AppContext'
 
 const App = () => {
@@ -18,6 +19,7 @@ const App = () => {
         <Route component={DeCAT} exact path="/decat" />
         <Route component={Verify} exact path="/verify" />
         <Route component={Portfolio} exact path="/portfolio" />
+        <Route component={Endorsement} exact path="/endorsement" />
       </div>
       </AppProvider>
     </Router>

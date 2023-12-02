@@ -6,9 +6,8 @@ import './home.css'
 // import { useLocation } from 'react-router-dom'
 import Script from "dangerous-html/react";
 import { Helmet } from "react-helmet";
-import { useAppContext } from '../AppContext'
+import { useAppContext } from '../AppContext';
 import { create as ipfsHttpClient } from "ipfs-http-client";
-import Papa from 'papaparse';
 
 const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
 const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
@@ -22,8 +21,9 @@ const DeCAT = () => {
     const [file_name, setFilename] = useState();
     // const [csv_file, setCsv] = useState();
     // const [csv_file_name, setCsvname] = useState();
-    const [addressData, setAddressData] = useState([]);
+    // const [addressData, setAddressData] = useState([]);
     const [send, setSend] = useState(0);
+    const [loader, setLoader] = useState(false);
     // const [uploadedImages, setUploadedImages] = useState();
     // const [Inputname, setName] = useState();
     // const [Inputdesc, setDesc] = useState();
@@ -92,8 +92,16 @@ const DeCAT = () => {
         console.log('connected with contract');
         const resp = await contractwithsigner.safeMint(walletaddress, ans.path);
         console.log(resp);
-        setSend(1);
-
+        setLoader(true);
+        event.target.reset();
+        const receipt = await resp.wait();
+        if(receipt.status == 1){
+          setSend(1);
+          setLoader(false);
+          alert("Your Sould Bound Token has been minted");
+        } else{
+          alert("Your Soul Bound Token has not been minted. Please try again")
+        }
     }
     if (authenticated){
         
@@ -120,13 +128,15 @@ const DeCAT = () => {
                 className="home-nav"
               >
                 <button className="home-button button-clean button">About</button>
-                <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
+                <a  href="/" className="home-button1 button-clean button">
+              Home
             </a>
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
-                <button className="home-button3 button-clean button">Team</button>
+            <a href="/portfolio" className="home-button2 button-clean button">
+                    Portfolio
+                  </a>
               </nav>
             </div>
             <div data-thq="thq-navbar-btn-group" className="home-btn-group">
@@ -179,13 +189,15 @@ const DeCAT = () => {
                   className="home-nav2"
                 >
                   <span className="home-text">About</span>
-                  <a  href="/decat" className="home-button1 button-clean button">
-                    Single Transaction
+                  <a  href="/" className="home-button1 button-clean button">
+                    Home
                   </a>
                   <a href="/multiple" className="home-button2 button-clean button">
                     Multiple Transaction
                   </a>
-                  <span className="home-text03">Team</span>
+                  <a href="/portfolio" className="home-button2 button-clean button">
+                    Portfolio
+                  </a>
                   <span className="home-text04">Blog</span>
                 </nav>
                 <div className="home-container2">
@@ -229,12 +241,9 @@ const DeCAT = () => {
               <br></br><br></br>
               {/* <label className='home-links' style={{color: "white"}}>Upload CSV</label>
               <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input> */}
-              <ul>
-                {addressData.map((address, index) => (
-                    <li key={index}>{address}</li>
-                ))}
-              </ul>
+              
               <button type="submit" className='home-button6 button'>Send SBT</button>
+              {loader && <div className="loader">Minting NFT in progress...</div>}
              
             </form>
           
