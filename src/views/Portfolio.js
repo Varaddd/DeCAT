@@ -244,7 +244,7 @@ const Portfolio = () => {
     </form>
 
     <div className="home-container">
-        <ul>{fetched_nftdata && 
+        <ul className="flex-container">{fetched_nftdata && 
         nft_data.map(nft => (
         <>
           <div className="home-card" style={{width: 700}}>
@@ -256,7 +256,7 @@ const Portfolio = () => {
         </>
         ))}
         </ul>
-      </div>
+    </div>
 
       </section>
       <section className="home-description">

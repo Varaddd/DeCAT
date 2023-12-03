@@ -6,9 +6,10 @@ import './home.css'
 // import { useLocation } from 'react-router-dom'
 import Script from "dangerous-html/react";
 import { Helmet } from "react-helmet";
-import { useAppContext } from '../AppContext'
+import { useAppContext } from '../AppContext';
 import { create as ipfsHttpClient } from "ipfs-http-client";
 import Papa from 'papaparse';
+import abi from "../contracts/test.json";
 
 const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
 const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
@@ -17,34 +18,51 @@ const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
 const Multiple = () => {
     const { state, setState } = useAppContext() 
     const { provider, signer, contract, account, authenticated } = state;
-    console.log(account, authenticated)
+    const [authorized, setAuth] = useState(0);
     const [file, setFile] = useState();
-    const [file_name, setFilename] = useState();
-    const [csv_file, setCsv] = useState();
-    const [csv_file_name, setCsvname] = useState();
-    const [addressData, setAddressData] = useState([]);
-    
-    // const [uploadedImages, setUploadedImages] = useState();
-    // const [Inputname, setName] = useState();
-    // const [Inputdesc, setDesc] = useState();
-    // const [baseUri, setUri] = useState();
+    const [send, setSend] = useState(0);
+    const [loader, setLoader] = useState(false);
+    const [addressArray, setAddressArray] = useState([]);
+    const [nameArray, setNameArray] = useState([]);
+    const [descriptionArray, setDescriptionArray] = useState([]);
+    const [isConnected, setConnection] = useState(false);
+    const [connectmsg, setMsg] = useState("Connect Wallet");
     
     const handlePhotoSelect = (event) => {
         setFile(event.target.files[0]);
-        setFilename(event.target.files[0].name);
     };
-    const handleCsv = (event) => {
-        setCsv(event.target.files[0]);
-        setCsvname(event.target.files[0].name);
-        Papa.parse(file, {
+
+    const handleCsvSelect = (event) => {
+      const csvfile = event.target.files[0];
+      if (csvfile) {
+        Papa.parse(csvfile, {
+            header: true,
+            dynamicTyping: true,
             complete: (result) => {
-              // Assuming the address column is the second column (index 1) in the CSV.
-              const addressColumn = result.data.map(row => row[1]);
-              setAddressData(addressColumn);
+                const { data } = result;
+                const addresses = data.map((row) => row.address);
+                const names = data.map((row) => row.name);
+                const descriptions = data.map((row) => row.description);
+                let i = 0;
+                while(i<names.length){
+                  if(names[i] == undefined){
+                    names.splice(i, 1);
+                    descriptions.splice(i, 1);
+                    addresses.splice(i, 1);
+                  } else{ i++; }
+                }
+                setAddressArray(addresses);
+                setNameArray(names);
+                setDescriptionArray(descriptions);
+                console.log(addresses, names, descriptions);
             },
-            header: true, // Set to true if your CSV has headers
+            error: (error) => {
+                console.error('CSV parsing error:', error.message);
+            },
         });
+      }
     }
+
     const ipfs = ipfsHttpClient({
         url: "https://ipfs.infura.io:5001/api/v0",
         headers: {
@@ -57,55 +75,108 @@ const Multiple = () => {
         const resp = await contractwithsigner.getVal(account)
         console.log(resp)
     } 
+    const connectWallet = async () => {
+      const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
+      const contractAbi = abi.abi;
+      try {
+        const { ethereum } = window;
+        if (ethereum) {
+          ethereum.on("chainChanged", () => {
+            window.location.reload();
+          });
+          ethereum.on("accountsChanged", () => {
+            window.location.reload();
+          });
+          const accounts = await ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          const account = accounts[0];
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+  
+          const signer = provider.getSigner();
+  
+          const contract = new ethers.Contract(
+            contractAddress,
+            contractAbi,
+            signer
+          );
+          const authenticated = false;
+          console.log(account)
+          setState({ provider, signer, contract, account, authenticated });
+          setConnection(true);
+          setMsg(account);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const SignIn = async(event) => {
+      event.preventDefault();
+      const {contract} = state;
+      const {signer} = state;
+      const walletAddress = document.querySelector('#walletaddress').value;
+      const password = document.querySelector('#password').value;
+      console.log(contract, password, walletAddress);
+      const contractwithsigner = contract.connect(signer);
+      const resp = await contractwithsigner.getVal(walletAddress);
+      if(resp == password){
+          setAuth(1)
+          const authenticated = true;
+          setState({ provider, signer, contract, account, authenticated});
+          //sessionStorage.setItem(account[0], JSON.stringify(state));    
+          console.log('logged In');
+          console.log(account, authenticated);
+      }
+      else{setAuth(2)}
+      event.target.reset()
+  };
+
     const SendSBT = async(event) => {
         event.preventDefault();
-        
-        const walletaddress = String(event.target.walletaddress.value);
-        const name = String(event.target.name.value);
-        const description = String(event.target.description.value);
-        //const images = event.target[0].files;
-        console.log(walletaddress, name, description);
-        // if (!images || images.length === 0) { 
-        //     return alert("No files selected");
-        // }
+        let tokenuris = []
         const image = file;
         console.log('uploading...');
         const result = await ipfs.add(image);
         const image_uri = "https://skywalker.infura-ipfs.io/ipfs/"+result.path;
         console.log('file uploaded');
-        const updatedJSON = `{
-            "name": "${name}",
-            "description": "${description}",
+        for(let i=0; i<nameArray.length; i++){
+          const updatedJSON = `{
+            "name": "${nameArray[i]}",
+            "description": "${descriptionArray[i]}",
             "image": "${image_uri}"
-        }`
-        console.log(updatedJSON);
-        const ans = await ipfs.add(updatedJSON);
-        console.log('uploaded data', ans.path);
+          }`
+          console.log(updatedJSON);
+          const ans = await ipfs.add(updatedJSON);
+          tokenuris.push(ans.path);
+          console.log('uploaded data', ans.path);
+        }
+        console.log(addressArray, tokenuris);
         const contractwithsigner = contract.connect(signer);
         console.log('connected with contract');
-        // Hash the path
-        //const hashedPath = crypto.SHA256(ans.path).toString();
-
-        // Convert the hashed path to bytes32
-        //const newpath = ethers.utils.formatBytes32String('0x' + hashedPath);
-        // Later, when you need the original path
-        //const originalPath = crypto.enc.Hex.stringify(crypto.enc.Hex.parse(newpath.substring(2))); // Remove '0x' prefix
-        //console.log(originalPath)
-        const resp = await contractwithsigner.safeMint(walletaddress, ans.path);
+        const resp = await contractwithsigner.mintBatch(addressArray, tokenuris);
         console.log(resp);
-
-
+        setLoader(true);
+        event.target.reset();
+        const receipt = await resp.wait();
+        if(receipt.status == 1){
+          setSend(1);
+          setLoader(false);
+          alert("All Your Sould Bound Tokens have been minted");
+        } else{
+          alert("Your Soul Bound Token has not been minted. Please try again")
+        }
     }
     if (authenticated){
         
         call()
     }
     return (<div>
-    {authenticated &&
+
     <div>
         <div className="home-container">
           <Helmet>
-            <title>Multiple Transaction</title>
+            <title>DeCAT</title>
             <meta property="og:title" content="Dashboard" />
           </Helmet>
           <header data-thq="thq-navbar" className="home-navbar">
@@ -121,13 +192,15 @@ const Multiple = () => {
                 className="home-nav"
               >
                 <button className="home-button button-clean button">About</button>
-                <button className="home-button1 button-clean button">
-                  Features
-                </button>
-                <button className="home-button2 button-clean button">
-                  Pricing
-                </button>
-                <button className="home-button3 button-clean button">Team</button>
+                <a  href="/" className="home-button1 button-clean button">
+              Home
+            </a>
+            <a href="/multiple" className="home-button2 button-clean button">
+              Multiple Transaction
+            </a>
+            <a href="/portfolio" className="home-button2 button-clean button">
+                    Portfolio
+                  </a>
               </nav>
             </div>
             <div data-thq="thq-navbar-btn-group" className="home-btn-group">
@@ -147,9 +220,9 @@ const Multiple = () => {
                   />
                 </button>
               </div>
-              {/* <button onClick={!isConnected && connectWallet} className="button">
+              <button onClick={!isConnected && connectWallet} className="button">
                 {connectmsg}
-              </button> */}
+              </button>
               
               
             </div>
@@ -180,9 +253,15 @@ const Multiple = () => {
                   className="home-nav2"
                 >
                   <span className="home-text">About</span>
-                  <span className="home-text01">Features</span>
-                  <span className="home-text02">Pricing</span>
-                  <span className="home-text03">Team</span>
+                  <a  href="/" className="home-button1 button-clean button">
+                    Home
+                  </a>
+                  <a href="/multiple" className="home-button2 button-clean button">
+                    Multiple Transaction
+                  </a>
+                  <a href="/portfolio" className="home-button2 button-clean button">
+                    Portfolio
+                  </a>
                   <span className="home-text04">Blog</span>
                 </nav>
                 <div className="home-container2">
@@ -203,28 +282,51 @@ const Multiple = () => {
               </div>
             </div>
           </header>
-          {/* {isConnected && <Loginsystem></Loginsystem>} */}
+          {isConnected && <div>
+    {authorized == 1 && 
+    // <div data-thq="thq-close-menu" className="home-caption01">Wohooo!! You are Logged In
+    // </div> && 
+    <div data-thq="thq-close-menu" className="home-caption01">LoggedIn successully
+    </div>
+    }
+
+    {authorized == 2 && 
+    <div data-thq="thq-close-menu" className="home-caption01">Wrong credentials
+    </div>
+    }
+  {authorized !== 1 &&
+    <form onSubmit={SignIn}>
+      <label className='home-links' style={{color: "white"}}>Wallet Address</label>
+      <input type="url" id="walletaddress" value={account ? account: ""} disabled style={{width: 300}} className="button"></input>
+      <br></br><br></br>
+      <label className='home-links' style={{color: "white"}}>Enter Password</label>
+      <input type="password" id="password" placeholder="Enter Your Password" className='home-button7 button'></input>
+
+      <button type="submit" className='home-button6 button'>Login</button>
+   </form>
+  }
+    
+    </div>}
+          {send == 1 && 
+          <div data-thq="thq-close-menu" className="home-caption01">SBT has been SENT!
+          </div>
+          }
+          {authorized == 1 &&
             <form onSubmit={SendSBT}>
-              <label className='home-links' style={{color: "white"}}>Wallet Address</label>
-              <input type="text" id="walletaddress" style={{width: 300}} className="button"></input>
+              <label className='home-links' style={{color: "white"}}>Upload CSV file</label>
+              <input type="file" id="file" className='home-button7 button' onChange={handleCsvSelect}></input>
               <br></br><br></br>
-              <label className='home-links' style={{color: "white"}}>Name your Certificate</label>
-              <input type="text" id="name" placeholder="Enter Name" style={{width: 300}} className="button"></input>
-              <label className='home-links' style={{color: "white"}}>Description</label>
-              <input type="text" id="description" placeholder="Enter Description" style={{width: 300}} className="button"></input>
               <label className='home-links' style={{color: "white"}}>Upload Image</label>
               <input type="file" id="image" className='home-button7 button' onChange={handlePhotoSelect}></input>
-              <label className='home-links' style={{color: "white"}}>Upload CSV</label>
-              <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input>
-              <ul>
-                {addressData.map((address, index) => (
-                    <li key={index}>{address}</li>
-                ))}
-              </ul>
+              <br></br><br></br>
+              {/* <label className='home-links' style={{color: "white"}}>Upload CSV</label>
+              <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input> */}
+              
               <button type="submit" className='home-button6 button'>Send SBT</button>
+              {loader && <div className="loader">Minting NFT's in progress...</div>}
              
             </form>
-          
+          }
           <section className="home-hero">
             <div className="home-heading">
               <h1 className="home-header">Leveraging Modified Soul Bound Tokens</h1>
@@ -476,10 +578,7 @@ const Multiple = () => {
           </footer>
         </div>
       );</div>
-    }
-    {!authenticated && 
-    <div>Please authenticate yourself</div>
-    }
+      
     </div>
     )
 }

@@ -7,27 +7,25 @@ import { Redirect } from 'react-router-dom'
 import abi from "../contracts/test.json";
 //import './App.css';
 import { ethers } from "ethers";
+import axios from "axios";
 
 import "./home.css";
 import Loginsystem from "./login";
+import Endorse from "./Endorse";
 import { useAppContext } from "../AppContext";
 
 const Home = (props) => {
-  // const [state, setState] = useState({
-  //   provider: null,
-  //   signer: null,
-  //   contract: null,
-  //   account: null,
-  //   authenticated: false,
-  // });
-  
-  
   const { state, setState } = useAppContext()
   const { provider, signer, contract, account, authenticated } = state;
   const [isConnected, setConnection] = useState(false);
   const [connectmsg, setMsg] = useState("Connect Wallet");
-  const [addresses, setAddresses] = useState([]);
+  // const [addresses, setAddresses] = useState([]);
   const [totalmints, setMints] = useState(0);
+  const [nft_data, setNFTData] = useState([]);
+  const [fetched_nftdata, setNFT] = useState(false);
+  const [get_cids, setCID] = useState([]);
+  const [ipfs_hash, setHash] = useState();
+  const [endorsementsAllowed, setEndorsementsAllowed] = useState(0);
   
   const connectWallet = async () => {
     const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
@@ -64,27 +62,37 @@ const Home = (props) => {
         const mints = resp.toNumber()
         setMints(mints);
 
-        // async function getMints(){
-        //   const contractwithsigner = contract.connect(signer);
-        //   console.log('connected with contract');
-        //   const resp = await contractwithsigner.total_mints();
-        //   console.log(resp.toNumber());
-        //   setMints(resp.toNumber());
-        //   const resp1 = await contractwithsigner.getAddresses();
-        //   console.log(resp1);
-        //   setAddresses(resp1)
-        //   const resp2 = await contractwithsigner.getValues(resp1);
-        //   console.log(resp2);
-        // }
-        // getMints();
+        const nfts = await contractwithsigner.getTokenIdAccount(account);
+        let nft_datas = [];
+        let ipfs_cids = [];
+        for(var i=0;i<nfts.length;i++){
+          const tokenId = nfts[i].toNumber();
+          const ipfs_cid = await contractwithsigner.tokenURI(tokenId);
+          console.log(ipfs_cid)
+          await axios.get(`https://ipfs.io/ipfs/${ipfs_cid}`).then((metadata) => {
+            ipfs_cids.push(ipfs_cid);
+            nft_datas.push(metadata.data);
+          });
+        }
+        console.log(nft_datas);
+        setNFT(true);
+        setCID(ipfs_cids);
+        setNFTData(nft_datas);
+        const response = await contractwithsigner.getEndorsementCheck(account);
+        const endorsements_allowed = response.toNumber();
+        setEndorsementsAllowed(endorsements_allowed);
       }
     } catch (error) {
       console.log(error);
     }
   };
   
-    
-  
+  const handleButtonClick = (index) => {
+    if(endorsementsAllowed<1){
+      alert("You are not allowed to make any endorsements");
+    }else{setHash(get_cids[index]);}
+  };
+
   return (
     <div className="home-container">
       <Helmet>
@@ -104,7 +112,7 @@ const Home = (props) => {
             className="home-nav"
           >
             <button className="home-button button-clean button">About</button>
-            <a  href="/decat" className="home-button1 button-clean button">
+            <a  href="/" className="home-button1 button-clean button">
               Single Transaction
             </a>
             <a href="/multiple" className="home-button2 button-clean button">
@@ -164,7 +172,7 @@ const Home = (props) => {
               className="home-nav2"
             >
               <span className="home-text">About</span>
-              <a  href="/decat" className="home-button1 button-clean button">
+              <a  href="/" className="home-button1 button-clean button">
               Single Transaction
             </a>
             <a href="/multiple" className="home-button2 button-clean button">
@@ -213,6 +221,26 @@ const Home = (props) => {
         </div>
       </section>
       <section className="home-description">
+      <div className="home-hero">
+      <label className='home-button7 button'>Total DeCAT Endorsements allowed: {endorsementsAllowed}
+      </label>
+      </div>
+      <div className="home-container">
+        <ul>{fetched_nftdata && 
+        nft_data.map((nft, index) => (
+        <>
+          <div className="home-card" style={{width: 700}} key={index}>
+          <li className="home-paragraph">{nft.name}: <br></br>{nft.description}
+          <img src={nft.image} className="home-image06" ></img>
+          </li>
+          <br></br>
+          {ipfs_hash !== get_cids[index] && <button className='home-button6 button' onClick={() => handleButtonClick(index)}>Endorse</button>}
+          {ipfs_hash == get_cids[index] && <Endorse passedValue={ipfs_hash}></Endorse>}
+          </div>
+          </>
+        ))}
+        </ul>
+    </div>
         <img
           alt="image"
           src="/hero-divider-1500w.png"
@@ -233,34 +261,7 @@ const Home = (props) => {
                 which plays a critical role in multibatch transactions.
               </p>
             </div>
-            {/* <div className="home-links">
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="button-link button"
-              >
-                <span>Follow us on Twitter</span>
-                <img
-                  alt="image"
-                  src="/Icons/arrow.svg"
-                  className="home-arrow"
-                />
-              </a>
-              <a
-                href="https://discord.com"
-                target="_blank"
-                rel="noreferrer noopener"
-                className="home-link01 button-link button"
-              >
-                <span>Join us on Discord</span>
-                <img
-                  alt="image"
-                  src="/Icons/arrow.svg"
-                  className="home-arrow1"
-                />
-              </a>
-            </div> */}
+            
           </div>
         </div>
       </section>
@@ -366,520 +367,6 @@ const Home = (props) => {
           </div>
         </div>
       </section>
-      {/* <section className="home-collection">
-        <div className="home-content04">
-          <span className="home-caption01">collection</span>
-          <div className="home-heading01">
-            <h2 className="home-header04">All time best collections</h2>
-            <p className="home-header05">
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-              eiusmod tempor incididunt ut labore et dolore.
-            </p>
-          </div>
-        </div>
-        <div className="home-main3">
-          <div className="home-card03">
-            <div className="home-image06">
-              <img
-                alt="image"
-                src="/Characters/character-1.svg"
-                className="home-image07"
-              />
-            </div>
-            <div className="home-content05">
-              <span className="home-caption02">Character #1</span>
-              <h3 className="home-title">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card04">
-            <div className="home-image08">
-              <img
-                alt="image"
-                src="/Characters/character-2.svg"
-                className="home-image09"
-              />
-            </div>
-            <div className="home-content06">
-              <span className="home-caption03">Character #2</span>
-              <h3 className="home-title1">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card05">
-            <div className="home-image10">
-              <img
-                alt="image"
-                src="/Characters/character-3.svg"
-                className="home-image11"
-              />
-            </div>
-            <div className="home-content07">
-              <span className="home-caption04">Character #3</span>
-              <h3 className="home-title2">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card06">
-            <div className="home-image12">
-              <img
-                alt="image"
-                src="/Characters/character-4.svg"
-                className="home-image13"
-              />
-            </div>
-            <div className="home-content08">
-              <span className="home-caption05">
-                <span>Character #4</span>
-                <br></br>
-              </span>
-              <h3 className="home-title3">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card07">
-            <div className="home-image14">
-              <img
-                alt="image"
-                src="/Characters/character-5.svg"
-                className="home-image15"
-              />
-            </div>
-            <div className="home-content09">
-              <span className="home-caption06">Character #5</span>
-              <h3 className="home-title4">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card08">
-            <div className="home-image16">
-              <img
-                alt="image"
-                src="/Characters/character-6.svg"
-                className="home-image17"
-              />
-            </div>
-            <div className="home-content10">
-              <span className="home-caption07">Character #6</span>
-              <h3 className="home-title5">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card09">
-            <div className="home-image18">
-              <img
-                alt="image"
-                src="/Characters/character-7.svg"
-                className="home-image19"
-              />
-            </div>
-            <div className="home-content11">
-              <span className="home-caption08">Character #7</span>
-              <h3 className="home-title6">0.05 ETH</h3>
-            </div>
-          </div>
-          <div className="home-card10">
-            <div className="home-image20">
-              <img
-                alt="image"
-                src="/Characters/character-8.svg"
-                className="home-image21"
-              />
-            </div>
-            <div className="home-content12">
-              <span className="home-caption09">Character #8</span>
-              <h3 className="home-title7">0.05 ETH</h3>
-            </div>
-          </div>
-        </div>
-        <button className="home-view2 button-link button">View all</button>
-      </section> */}
-      {/* <section className="home-project">
-        <div className="home-understand">
-          <div className="home-content13">
-            <span className="home-caption10">Project</span>
-            <div className="home-heading02">
-              <h2 className="home-header06">Understand the project</h2>
-              <p className="home-header07">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </p>
-            </div>
-            <button className="home-view3 button-link button">
-              <span>Learn More</span>
-              <img
-                alt="image"
-                src="/Icons/arrow.svg"
-                className="home-image22"
-              />
-            </button>
-          </div>
-          <img alt="image" src="/group%202415.svg" className="home-image23" />
-        </div>
-        <div className="home-mining">
-          <img alt="image" src="/group%202422.svg" className="home-image24" />
-          <div className="home-content14">
-            <span className="home-caption11">Project</span>
-            <div className="home-heading03">
-              <h2 className="home-header08">How the minting works</h2>
-              <p className="home-header09">
-                <span>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat.
-                </span>
-                <br></br>
-                <br></br>
-                <span>
-                  Duis aute irure dolor in reprehenderit in voluptate velit esse
-                  cillum dolore eu fugiat nulla pariatur.
-                </span>
-                <br></br>
-              </p>
-            </div>
-            <button className="home-view4 button-link button">
-              <span>Learn More</span>
-              <img
-                alt="image"
-                src="/Icons/arrow.svg"
-                className="home-image25"
-              />
-            </button>
-          </div>
-        </div>
-      </section> */}
-      {/* <section className="home-roadmap">
-        <div className="home-heading04">
-          <h2 className="home-header10">Roadmap</h2>
-          <p className="home-header11">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-            eiusmod tempor incididunt ut labore
-          </p>
-        </div>
-        <div className="home-list">
-          <div className="home-step">
-            <span className="home-caption12">01</span>
-            <div className="home-heading05">
-              <h2 className="home-header12">Project Launch</h2>
-              <p className="home-header13">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam, quis nostrud exercitation ullamco laboris
-                nisi ut aliquip ex ea commodo consequat.
-              </p>
-            </div>
-            <button className="home-button6 button">View on Opensea</button>
-          </div>
-          <div className="home-step1">
-            <span className="home-caption13">02</span>
-            <div className="home-heading06">
-              <h2 className="home-header14">Metadata and Character</h2>
-              <p className="home-header15">
-                <span>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: ' ',
-                    }}
-                  />
-                </span>
-                <br></br>
-                <br></br>
-                <span>
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat.
-                </span>
-                <br></br>
-              </p>
-            </div>
-          </div>
-          <div className="home-step2">
-            <span className="home-caption14">03</span>
-            <div className="home-heading07">
-              <h2 className="home-header16">Get Physical</h2>
-              <p className="home-header17">
-                <span>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed
-                  do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: ' ',
-                    }}
-                  />
-                </span>
-                <br></br>
-                <br></br>
-                <span>
-                  Ut enim ad minim veniam, quis nostrud exercitation ullamco
-                  laboris nisi ut aliquip ex ea commodo consequat.
-                </span>
-                <br></br>
-              </p>
-            </div>
-          </div>
-          <div className="home-step3">
-            <span className="home-caption15">04</span>
-            <div className="home-heading08">
-              <h2 className="home-header18">Private club community</h2>
-              <p className="home-header19">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </p>
-              <div className="home-benefits">
-                <div className="home-item">
-                  <img
-                    alt="image"
-                    src="/Icons/people.svg"
-                    className="home-image26"
-                  />
-                  <p className="home-header20">Consectetur adipiscing elit</p>
-                </div>
-                <div className="home-item1">
-                  <img
-                    alt="image"
-                    src="/Icons/paper.svg"
-                    className="home-image27"
-                  />
-                  <p className="home-header21">Consectetur adipiscing elit</p>
-                </div>
-                <div className="home-item2">
-                  <img
-                    alt="image"
-                    src="/Icons/checklist.svg"
-                    className="home-image28"
-                  />
-                  <p className="home-header22">Consectetur adipiscing elit</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section> */}
-      {/* <section className="home-join-us">
-        <div className="home-content15">
-          <div className="home-main4">
-            <div className="home-heading09">
-              <h2 className="home-header23">Create your character now</h2>
-              <p className="home-caption16">
-                A character custom collection is joining the NFT space on
-                Opensea.
-              </p>
-            </div>
-            <button className="home-view5 button">View on Opensea</button>
-          </div>
-          <img alt="image" src="/group%202273.svg" className="home-image29" />
-        </div>
-      </section>
-      <section className="home-faq">
-        <h2 className="home-header24">We have all the answers</h2>
-        <div className="home-accordion">
-          <div
-            data-role="accordion-container"
-            className="home-element accordion"
-          >
-            <div className="home-content16">
-              <span className="home-header25">
-                Lorem ipsum dolor sit ametetur elit?
-              </span>
-              <span
-                data-role="accordion-content"
-                className="home-description05"
-              >
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </span>
-            </div>
-            <div className="home-icon-container">
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-closed"
-                className="home-icon10"
-              >
-                <path d="M213.333 554.667h256v256c0 23.552 19.115 42.667 42.667 42.667s42.667-19.115 42.667-42.667v-256h256c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-256v-256c0-23.552-19.115-42.667-42.667-42.667s-42.667 19.115-42.667 42.667v256h-256c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-open"
-                className="home-icon12"
-              >
-                <path d="M213.333 554.667h597.333c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-597.333c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-            </div>
-          </div>
-          <div
-            data-role="accordion-container"
-            className="home-element1 accordion"
-          >
-            <div className="home-content17">
-              <span className="home-header26">
-                Excepteur sint occaecat cupidatat non sunt in culpa qui officia
-                deserunt mollit anim id est laborum?
-              </span>
-              <span
-                data-role="accordion-content"
-                className="home-description06"
-              >
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </span>
-            </div>
-            <div className="home-icon-container1">
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-closed"
-                className="home-icon14"
-              >
-                <path d="M213.333 554.667h256v256c0 23.552 19.115 42.667 42.667 42.667s42.667-19.115 42.667-42.667v-256h256c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-256v-256c0-23.552-19.115-42.667-42.667-42.667s-42.667 19.115-42.667 42.667v256h-256c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-open"
-                className="home-icon16"
-              >
-                <path d="M213.333 554.667h597.333c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-597.333c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-            </div>
-          </div>
-          <div
-            data-role="accordion-container"
-            className="home-element2 accordion"
-          >
-            <div className="home-content18">
-              <span className="home-header27">
-                Tempor incididunt ut labore et dolore magna aliquat enim ad
-                minim?
-              </span>
-              <span
-                data-role="accordion-content"
-                className="home-description07"
-              >
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </span>
-            </div>
-            <div className="home-icon-container2">
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-closed"
-                className="home-icon18"
-              >
-                <path d="M213.333 554.667h256v256c0 23.552 19.115 42.667 42.667 42.667s42.667-19.115 42.667-42.667v-256h256c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-256v-256c0-23.552-19.115-42.667-42.667-42.667s-42.667 19.115-42.667 42.667v256h-256c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-open"
-                className="home-icon20"
-              >
-                <path d="M213.333 554.667h597.333c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-597.333c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-            </div>
-          </div>
-          <div
-            data-role="accordion-container"
-            className="home-element3 accordion"
-          >
-            <div className="home-content19">
-              <span className="home-header28">
-                Lorem ipsum dolor sit ametetur elit?
-              </span>
-              <span
-                data-role="accordion-content"
-                className="home-description08"
-              >
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </span>
-            </div>
-            <div className="home-icon-container3">
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-closed"
-                className="home-icon22"
-              >
-                <path d="M213.333 554.667h256v256c0 23.552 19.115 42.667 42.667 42.667s42.667-19.115 42.667-42.667v-256h256c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-256v-256c0-23.552-19.115-42.667-42.667-42.667s-42.667 19.115-42.667 42.667v256h-256c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-open"
-                className="home-icon24"
-              >
-                <path d="M213.333 554.667h597.333c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-597.333c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-            </div>
-          </div>
-          <div
-            data-role="accordion-container"
-            className="home-element4 accordion"
-          >
-            <div className="home-content20">
-              <span className="home-header29">
-                Incididunt ut labore et dolore?
-              </span>
-              <span
-                data-role="accordion-content"
-                className="home-description09"
-              >
-                Sed ut perspiciatis unde omnis iste natus error sit voluptatem
-                accusantium doloremque laudantium, totam rem aperiam, eaque ipsa
-                quae ab illo inventore veritatis et quasi architecto beatae
-                vitae dicta sunt explicabo.
-                <span
-                  dangerouslySetInnerHTML={{
-                    __html: ' ',
-                  }}
-                />
-              </span>
-            </div>
-            <div className="home-icon-container4">
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-closed"
-                className="home-icon26"
-              >
-                <path d="M213.333 554.667h256v256c0 23.552 19.115 42.667 42.667 42.667s42.667-19.115 42.667-42.667v-256h256c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-256v-256c0-23.552-19.115-42.667-42.667-42.667s-42.667 19.115-42.667 42.667v256h-256c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-              <svg
-                viewBox="0 0 1024 1024"
-                data-role="accordion-icon-open"
-                className="home-icon28"
-              >
-                <path d="M213.333 554.667h597.333c23.552 0 42.667-19.115 42.667-42.667s-19.115-42.667-42.667-42.667h-597.333c-23.552 0-42.667 19.115-42.667 42.667s19.115 42.667 42.667 42.667z"></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-      </section> */}
 
       <footer className="home-footer">
         <div className="home-main5">

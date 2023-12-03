@@ -16,18 +16,10 @@ const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
 const DeCAT = () => {
     const { state, setState } = useAppContext() 
     const { provider, signer, contract, account, authenticated } = state;
-    console.log(account, authenticated)
     const [file, setFile] = useState();
     const [file_name, setFilename] = useState();
-    // const [csv_file, setCsv] = useState();
-    // const [csv_file_name, setCsvname] = useState();
-    // const [addressData, setAddressData] = useState([]);
     const [send, setSend] = useState(0);
     const [loader, setLoader] = useState(false);
-    // const [uploadedImages, setUploadedImages] = useState();
-    // const [Inputname, setName] = useState();
-    // const [Inputdesc, setDesc] = useState();
-    // const [baseUri, setUri] = useState();
     
     const handlePhotoSelect = (event) => {
         setFile(event.target.files[0]);

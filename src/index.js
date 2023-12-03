@@ -9,6 +9,7 @@ import Verify from './views/Verify'
 import Portfolio from './views/Portfolio'
 import Endorsement from './views/Endorsement'
 import { AppProvider } from './AppContext'
+import Multiple from './views/Multiple'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
         <Route component={Verify} exact path="/verify" />
         <Route component={Portfolio} exact path="/portfolio" />
         <Route component={Endorsement} exact path="/endorsement" />
+        <Route component={Multiple} exact path="/multiple" />
       </div>
       </AppProvider>
     </Router>
