@@ -26,6 +26,8 @@ const Home = (props) => {
   const [get_cids, setCID] = useState([]);
   const [ipfs_hash, setHash] = useState();
   const [endorsementsAllowed, setEndorsementsAllowed] = useState(0);
+
+  const nftipfsAddress = "https://gateway.lighthouse.storage/ipfs/";
   
   const connectWallet = async () => {
     const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
@@ -69,7 +71,7 @@ const Home = (props) => {
           const tokenId = nfts[i].toNumber();
           const ipfs_cid = await contractwithsigner.tokenURI(tokenId);
           console.log(ipfs_cid)
-          await axios.get(`https://ipfs.io/ipfs/${ipfs_cid}`).then((metadata) => {
+          await axios.get(nftipfsAddress+ipfs_cid).then((metadata) => {
             ipfs_cids.push(ipfs_cid);
             nft_datas.push(metadata.data);
           });
@@ -100,7 +102,9 @@ const Home = (props) => {
         <meta property="og:title" content="Dashboard" />
       </Helmet>
       <header data-thq="thq-navbar" className="home-navbar">
-        <span className="home-logo">DeCAT</span>
+        <span className="home-logo"><a  href="/">
+              DeCAT
+            </a></span>
         <div
           data-thq="thq-navbar-nav"
           data-role="Nav"
@@ -111,17 +115,14 @@ const Home = (props) => {
             data-role="Nav"
             className="home-nav"
           >
-            <button className="home-button button-clean button">About</button>
-            <a  href="/" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
+            
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
             <a href="/portfolio" className="home-button2 button-clean button">
               Portfolio
             </a>
-            <button className="home-button3 button-clean button">Team</button>
+
           </nav>
         </div>
         <div data-thq="thq-navbar-btn-group" className="home-btn-group">
@@ -171,15 +172,10 @@ const Home = (props) => {
               data-role="Nav"
               className="home-nav2"
             >
-              <span className="home-text">About</span>
-              <a  href="/" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
-              <span className="home-text03">Team</span>
-              <span className="home-text04">Blog</span>
+
             </nav>
             <div className="home-container2">
               <button className="home-login button">Login</button>

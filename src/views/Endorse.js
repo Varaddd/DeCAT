@@ -53,7 +53,7 @@ const Endorse = (props) => {
          <button type="submit" className='home-button6 button'>Endorse</button>
         
      </form>
-     {loader && <div className="loader" style={{color: "white"}}>Endorsing NFT...</div>}
+     {loader && <div><label className='home-links' style={{color: "white"}}>Endorsing SBT...</label><div className="loader"></div></div>}
     </div>
     )
 }

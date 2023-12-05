@@ -14,10 +14,6 @@ import "./home.css";
 // import { CovalentClient } from "@covalenthq/client-sdk";
 
 const Portfolio = () => {
-  // const { state, setState } = useAppContext()
-  // const { provider, signer, contract, account, authenticated } = state;
-  // const [isConnected, setConnection] = useState(false);
-  // const [connectmsg, setMsg] = useState("Connect Wallet");
   const [address, setAddress] = useState();
   const [contract, setNewContract] = useState();
   // const [totalmints, setMints] = useState(0);
@@ -26,6 +22,7 @@ const Portfolio = () => {
   const [nft_data, setNFTData] = useState([]);
   const [fetched_nftdata, setNFT] = useState(false);
   const [loader, setLoader] = useState(false);
+  const nftipfsAddress = "https://gateway.lighthouse.storage/ipfs/";
 
   useEffect(() => {
     const connectWallet = async () => {
@@ -85,10 +82,15 @@ const Portfolio = () => {
         for(var i=0;i<nfts.length;i++){
           const tokenId = nfts[i].toNumber();
           const ipfs_cid = await contractwithsigner.tokenURI(tokenId);
-          console.log(ipfs_cid)
-          await axios.get(`https://ipfs.io/ipfs/${ipfs_cid}`).then((metadata) => {
-            nft_datas.push(metadata.data);
-          });
+          console.log(ipfs_cid);
+          try{
+            await axios.get(nftipfsAddress+ipfs_cid).then((metadata) => {
+              nft_datas.push(metadata.data);
+            });
+          } catch(e){
+            console.log('something went wrong');
+          }
+          
         }
         console.log(nft_datas);
         setNFT(true);
@@ -106,7 +108,9 @@ const Portfolio = () => {
         <meta property="og:title" content="Dashboard" />
       </Helmet>
       <header data-thq="thq-navbar" className="home-navbar">
-        <span className="home-logo">DeCAT</span>
+      <span className="home-logo"><a  href="/">
+              DeCAT
+            </a></span>
         <div
           data-thq="thq-navbar-nav"
           data-role="Nav"
@@ -117,10 +121,6 @@ const Portfolio = () => {
             data-role="Nav"
             className="home-nav"
           >
-            <button className="home-button button-clean button">About</button>
-            <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
@@ -132,25 +132,8 @@ const Portfolio = () => {
         </div>
         <div data-thq="thq-navbar-btn-group" className="home-btn-group">
           <div className="home-socials">
-            {/* <button className="social button">
-              <img
-                alt="image"
-                src="/Icons/twitter.svg"
-                className="home-image"
-              />
-            </button>
-            <button className="social button">
-              <img
-                alt="image"
-                src="/Icons/discord.svg"
-                className="home-image01"
-              />
-            </button> */}
           </div>
           
-          {/* <button onClick={!isConnected && connectWallet} className="button">
-            {connectmsg}
-          </button> */}
         </div>
         
         <div data-thq="thq-burger-menu" className="home-burger-menu">
@@ -179,15 +162,10 @@ const Portfolio = () => {
               data-role="Nav"
               className="home-nav2"
             >
-              <span className="home-text">About</span>
-              <a  href="/decat" className="home-button1 button-clean button">
-              Single Transaction
-            </a>
+              
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
-              <span className="home-text03">Team</span>
-              <span className="home-text04">Blog</span>
             </nav>
             <div className="home-container2">
               <button className="home-login button">Login</button>
@@ -239,7 +217,7 @@ const Portfolio = () => {
          <input type="text" id="walletaddress" style={{width: 300}} className="button"></input>
          <br></br><br></br>
          <button type="submit" className='home-button6 button'>Get NFT</button>
-         {loader && <div className="loader">Fetching SBT...</div>}
+         {loader && <div><label className='home-links' style={{color: "white"}}>Fetching SBT...</label><div className="loader"></div></div>}
       </div>
     </form>
 

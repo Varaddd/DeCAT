@@ -10,10 +10,12 @@ import { useAppContext } from '../AppContext';
 import { create as ipfsHttpClient } from "ipfs-http-client";
 import Papa from 'papaparse';
 import abi from "../contracts/test.json";
+import lighthouse from '@lighthouse-web3/sdk';
 
 const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
 const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
 const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
+const apiKey = "194b6492.3434e5ba7c13407fb862f5d85412b94d";
 
 const Multiple = () => {
     const { state, setState } = useAppContext() 
@@ -137,8 +139,9 @@ const Multiple = () => {
         let tokenuris = []
         const image = file;
         console.log('uploading...');
-        const result = await ipfs.add(image);
-        const image_uri = "https://skywalker.infura-ipfs.io/ipfs/"+result.path;
+        // const result = await ipfs.add(image);
+        const result = await lighthouse.uploadBuffer(image, apiKey);
+        const image_uri = "https://gateway.lighthouse.storage/ipfs/"+result.data.Hash;
         console.log('file uploaded');
         for(let i=0; i<nameArray.length; i++){
           const updatedJSON = `{
@@ -147,9 +150,10 @@ const Multiple = () => {
             "image": "${image_uri}"
           }`
           console.log(updatedJSON);
-          const ans = await ipfs.add(updatedJSON);
-          tokenuris.push(ans.path);
-          console.log('uploaded data', ans.path);
+          // const ans = await ipfs.add(updatedJSON);
+          const ans = await lighthouse.uploadText(updatedJSON, apiKey);
+          tokenuris.push(ans.data.Hash);
+          console.log('uploaded data', ans.data.Hash);
         }
         console.log(addressArray, tokenuris);
         const contractwithsigner = contract.connect(signer);
@@ -180,7 +184,9 @@ const Multiple = () => {
             <meta property="og:title" content="Dashboard" />
           </Helmet>
           <header data-thq="thq-navbar" className="home-navbar">
-            <span className="home-logo">DeCAT</span>
+          <span className="home-logo"><a  href="/">
+              DeCAT
+            </a></span>
             <div
               data-thq="thq-navbar-nav"
               data-role="Nav"
@@ -191,7 +197,6 @@ const Multiple = () => {
                 data-role="Nav"
                 className="home-nav"
               >
-                <button className="home-button button-clean button">About</button>
                 <a  href="/" className="home-button1 button-clean button">
               Home
             </a>
@@ -252,7 +257,7 @@ const Multiple = () => {
                   data-role="Nav"
                   className="home-nav2"
                 >
-                  <span className="home-text">About</span>
+                  
                   <a  href="/" className="home-button1 button-clean button">
                     Home
                   </a>
@@ -262,7 +267,7 @@ const Multiple = () => {
                   <a href="/portfolio" className="home-button2 button-clean button">
                     Portfolio
                   </a>
-                  <span className="home-text04">Blog</span>
+
                 </nav>
                 <div className="home-container2">
                   <button className="home-login button">Login</button>
@@ -323,7 +328,7 @@ const Multiple = () => {
               <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input> */}
               
               <button type="submit" className='home-button6 button'>Send SBT</button>
-              {loader && <div className="loader">Minting NFT's in progress...</div>}
+              {loader &&  <div><label className='home-links' style={{color: "white"}}>Minting SBT's in progress...</label><div className="loader"></div></div>}
              
             </form>
           }

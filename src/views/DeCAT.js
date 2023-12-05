@@ -8,10 +8,12 @@ import Script from "dangerous-html/react";
 import { Helmet } from "react-helmet";
 import { useAppContext } from '../AppContext';
 import { create as ipfsHttpClient } from "ipfs-http-client";
+import lighthouse from '@lighthouse-web3/sdk';
 
-const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
-const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
-const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
+// const projectId = '2WCbZ8YpmuPxUtM6PzbFOfY5k4B';
+// const projectSecretKey = 'c8b676d8bfe769b19d88d8c77a9bd1e2';
+// const authorization = "Basic " + btoa(projectId + ":" + projectSecretKey);
+const apiKey = process.env.REACT_APP_LIGHTHOUSE_API_KEY;
 
 const DeCAT = () => {
     const { state, setState } = useAppContext() 
@@ -25,30 +27,13 @@ const DeCAT = () => {
         setFile(event.target.files[0]);
         setFilename(event.target.files[0].name);
     };
-    // const handleCsv = (event) => {
-    //   setCsv(event.target.files[0]);
-    //   setCsvname(event.target.files[0].name);
-    //   Papa.parse(file, {
-    //       header: true,
-    //       skipEmptyLines: true,
-    //       dynamicTyping: true,
-    //       complete: (result) => {
-    //         // Assuming the address column is the second column (index 1) in the CSV.
-    //         const data = result.data;
-    //         if (data && data.length > 0) {
-    //           const addressColumn = data.map((row) => row['Address']); // Replace 'address' with the actual column name in your CSV
-    //           setAddressData(addressColumn);
-    //           console.log(data);
-    //     }
-    //   },
-    //   });
-    // }
-    const ipfs = ipfsHttpClient({
-        url: "https://ipfs.infura.io:5001/api/v0",
-        headers: {
-          authorization,
-        },
-    });
+
+    // const ipfs = ipfsHttpClient({
+    //     url: "https://ipfs.infura.io:5001/api/v0",
+    //     headers: {
+    //       authorization,
+    //     },
+    // });
 
     const call = async() => {
         const contractwithsigner = contract.connect(signer)
@@ -69,30 +54,37 @@ const DeCAT = () => {
         // }
         const image = file;
         console.log('uploading...');
-        const result = await ipfs.add(image);
-        const image_uri = "https://skywalker.infura-ipfs.io/ipfs/"+result.path;
+        // const result = await ipfs.add(image);
+        const result = await lighthouse.uploadBuffer(file, apiKey);
+        const image_uri = "https://gateway.lighthouse.storage/ipfs/"+result.data.Hash;
         console.log('file uploaded');
+        console.log(image_uri);
         const updatedJSON = `{
             "name": "${name}",
             "description": "${description}",
             "image": "${image_uri}"
         }`
         console.log(updatedJSON);
-        const ans = await ipfs.add(updatedJSON);
-        console.log('uploaded data', ans.path);
+        // const ans = await ipfs.add(updatedJSON);
+        const ans = await lighthouse.uploadText(updatedJSON, apiKey);
+        console.log('uploaded data', ans.data.Hash);
         const contractwithsigner = contract.connect(signer);
         console.log('connected with contract');
-        const resp = await contractwithsigner.safeMint(walletaddress, ans.path);
-        console.log(resp);
-        setLoader(true);
-        event.target.reset();
-        const receipt = await resp.wait();
-        if(receipt.status == 1){
-          setSend(1);
-          setLoader(false);
-          alert("Your Sould Bound Token has been minted");
-        } else{
-          alert("Your Soul Bound Token has not been minted. Please try again")
+        try{
+          const resp = await contractwithsigner.safeMint(walletaddress, ans.data.Hash);
+          console.log(resp);
+          setLoader(true);
+          event.target.reset();
+          const receipt = await resp.wait();
+          if(receipt.status == 1){
+            setSend(1);
+            setLoader(false);
+            alert("Your Sould Bound Token has been minted");
+          } else{
+            alert("Your Soul Bound Token has not been minted. Please try again")
+          }
+        } catch(e){
+          alert(`Transaction aborted with message: ${e}`);
         }
     }
     if (authenticated){
@@ -108,7 +100,9 @@ const DeCAT = () => {
             <meta property="og:title" content="Dashboard" />
           </Helmet>
           <header data-thq="thq-navbar" className="home-navbar">
-            <span className="home-logo">DeCAT</span>
+          <span className="home-logo"><a  href="/">
+              DeCAT
+            </a></span>
             <div
               data-thq="thq-navbar-nav"
               data-role="Nav"
@@ -119,7 +113,7 @@ const DeCAT = () => {
                 data-role="Nav"
                 className="home-nav"
               >
-                <button className="home-button button-clean button">About</button>
+                
                 <a  href="/" className="home-button1 button-clean button">
               Home
             </a>
@@ -180,7 +174,7 @@ const DeCAT = () => {
                   data-role="Nav"
                   className="home-nav2"
                 >
-                  <span className="home-text">About</span>
+                  
                   <a  href="/" className="home-button1 button-clean button">
                     Home
                   </a>
@@ -190,7 +184,7 @@ const DeCAT = () => {
                   <a href="/portfolio" className="home-button2 button-clean button">
                     Portfolio
                   </a>
-                  <span className="home-text04">Blog</span>
+
                 </nav>
                 <div className="home-container2">
                   <button className="home-login button">Login</button>
@@ -235,7 +229,7 @@ const DeCAT = () => {
               <input type="file" id="image" className='home-button7 button' onChange={handleCsv}></input> */}
               
               <button type="submit" className='home-button6 button'>Send SBT</button>
-              {loader && <div className="loader">Minting NFT in progress...</div>}
+              {loader &&  <div><label className='home-links' style={{color: "white"}}>Minting SBT...</label><div className="loader"></div></div>}
              
             </form>
           
