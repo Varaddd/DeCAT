@@ -26,6 +26,7 @@ const Home = (props) => {
   const [get_cids, setCID] = useState([]);
   const [ipfs_hash, setHash] = useState();
   const [endorsementsAllowed, setEndorsementsAllowed] = useState(0);
+  const [admin, setAdmin] = useState(false);
 
   const nftipfsAddress = "https://gateway.lighthouse.storage/ipfs/";
   
@@ -58,8 +59,12 @@ const Home = (props) => {
         console.log(account)
         setState({ provider, signer, contract, account, authenticated });
         setConnection(true);
-        setMsg(account);
         const contractwithsigner = contract.connect(signer);
+        const pass = await contractwithsigner.creds(account);
+        if(pass !== undefined && pass !== ""){
+          setAdmin(true);
+        }
+        setMsg(account);
         const resp = await contractwithsigner.getTotalMints();
         const mints = resp.toNumber()
         setMints(mints);
@@ -122,7 +127,9 @@ const Home = (props) => {
             <a href="/portfolio" className="home-button2 button-clean button">
               Portfolio
             </a>
-
+            <a href="/reputation" className="home-button2 button-clean button">
+              Reputation
+            </a>
           </nav>
         </div>
         <div data-thq="thq-navbar-btn-group" className="home-btn-group">
@@ -195,12 +202,10 @@ const Home = (props) => {
           </div>
         </div>
       </header>
-      <div class="home-hero">
-      {isConnected && <label className='home-button7 button'>Total DeCAT NFT's Minted: {totalmints}
-      </label>}
-      </div>
-      {isConnected && <Loginsystem></Loginsystem>}
       
+      {isConnected && <label className='home-button7 button'>Total DeCAT NFT's Minted: {totalmints}
+      </label>}<br></br>
+      {isConnected && admin && <Loginsystem></Loginsystem>}
       <section className="home-hero">
         <div className="home-heading">
           <h1 className="home-header">Leveraging Modified Soul Bound Tokens</h1>

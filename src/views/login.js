@@ -45,7 +45,8 @@ const Loginsystem = () => {
     </div>
     }
     <form onSubmit={SignIn}>
-         <label className='home-links' style={{color: "white"}}>Wallet Address</label>
+        <label className='home-logo'>Welcome Admin</label> <br></br>
+         <label className='home-links'style={{color: "white"}}>Wallet Address</label>
          <input type="url" id="walletaddress" value={account ? account: ""} disabled style={{width: 300}} className="button"></input>
          <br></br><br></br>
          <label className='home-links' style={{color: "white"}}>Enter Password</label>

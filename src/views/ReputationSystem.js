@@ -3,112 +3,110 @@ import React from "react";
 import Script from "dangerous-html/react";
 import { Helmet } from "react-helmet";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import { Redirect } from 'react-router-dom'
 import abi from "../contracts/test.json";
 //import './App.css';
 import { ethers } from "ethers";
-
+import axios from "axios";
+import { Bar } from "react-chartjs-2"; 
+import Chart from 'chart.js/auto';
 import "./home.css";
-// import { useAppContext } from "../AppContext";
-// import { CovalentClient } from "@covalenthq/client-sdk";
+import { useAppContext } from "../AppContext";
 
-const Portfolio = () => {
-  const [address, setAddress] = useState();
-  const [contract, setNewContract] = useState();
-  // const [totalmints, setMints] = useState(0);
-  const [signer, setSigner] = useState();
-  const [address_mints, setAddressMints] = useState("Please Enter an address first");
-  const [nft_data, setNFTData] = useState([]);
-  const [fetched_nftdata, setNFT] = useState(false);
-  const [loader, setLoader] = useState(false);
+const ReputationSystem = (props) => {
+  const { state, setState } = useAppContext()
+  const { provider, signer, contract, account, authenticated } = state;
+  const [isConnected, setConnection] = useState(false);
+  const [connectmsg, setMsg] = useState("Connect Wallet");
+  const [totalmints, setMints] = useState(0);
+  const [accounts, setAccounts] = useState([]);
+  const [reputation_score, setReputationScore] = useState([]);
+  const [randomBgcolor, setRandomBg] = useState([]);
+  const [showGraph, setGraph] = useState(false);
+  const [currReputation, setReputation] = useState({
+    cur_mints: 0,
+    cur_endorsements: 0,
+    total_score: 0
+  })
+
   const nftipfsAddress = "https://gateway.lighthouse.storage/ipfs/";
+  const randomColor = () => `rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 0.2)`;
 
-  useEffect(() => {
-    const connectWallet = async () => {
-      const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
-      const contractAbi = abi.abi;
-      try {
-        const { ethereum } = window;
-        if (ethereum) {
-          ethereum.on("chainChanged", () => {
-            window.location.reload();
-          });
-          ethereum.on("accountsChanged", () => {
-            window.location.reload();
-          });
-          const accounts = await ethereum.request({
-            method: "eth_requestAccounts",
-          });
-          const account = accounts[0];
-          setAddress(account);
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-
-          const signer = provider.getSigner();
-
-          const contract = new ethers.Contract(
-            contractAddress,
-            contractAbi,
-            signer
-          );
-          const authenticated = false;
-          setNewContract(contract);
-          setSigner(signer);
-          // setState({ provider, signer, contract, account, authenticated });
-          // setConnection(true);
-          // setMsg(account);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-  };
-  connectWallet();
-  }, []);
-
-  const getNFT = async(event) => {
-    event.preventDefault();
-    console.log(contract, signer);
-    if(contract != undefined && signer!=undefined){
-        const address = document.querySelector('#walletaddress').value;
-        const contractwithsigner = contract.connect(signer);
-        const resp = await contractwithsigner.total_sbt_received_in_account(address);
-        setAddressMints(resp.toNumber());
-        // const client = new CovalentClient("cqt_rQt3xrBGR96Gg3bp7qk7vGJDQ8rV");
-        // const response = await client.BalanceService.getTokenBalancesForWalletAddress("eth-sepolia",address, {"nft": true});
-        // console.log(response.data["items"], response.data["items"].length);
-        setLoader(true);
-        const nfts = await contractwithsigner.getTokenIdAccount(address);
-        let nft_datas = []
-        for(var i=0;i<nfts.length;i++){
-          const tokenId = nfts[i].toNumber();
-          const ipfs_cid = await contractwithsigner.tokenURI(tokenId);
-          console.log(ipfs_cid);
-          try{
-            await axios.get(nftipfsAddress+ipfs_cid).then((metadata) => {
-              nft_datas.push(metadata.data);
-            });
-          } catch(e){
-            console.log('something went wrong');
-          }
-          
-        }
-        console.log(nft_datas);
-        setNFT(true);
-        setNFTData(nft_datas);
-        setLoader(false);
-    } else{alert("Please connect to you metamask wallet");}
-    event.target.reset();
-  }
-    
   
+  const connectWallet = async () => {
+    const contractAddress = "0x0Ffe7FB2b553e8553E65C90860f651eD76bBF3eb";//"0xe8750E54151a8eA203ef65e0fB11230676b9b033";
+    const contractAbi = abi.abi;
+    try {
+      const { ethereum } = window;
+      if (ethereum) {
+        ethereum.on("chainChanged", () => {
+          window.location.reload();
+        });
+        ethereum.on("accountsChanged", () => {
+          window.location.reload();
+        });
+        const accounts = await ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        const account = accounts[0];
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+        const signer = provider.getSigner();
+
+        const contract = new ethers.Contract(
+          contractAddress,
+          contractAbi,
+          signer
+        );
+        const authenticated = false;
+        console.log(account)
+        setState({ provider: provider, signer: signer, contract: contract, account: account, authenticated: authenticated });
+        setConnection(true);
+        setMsg(account);
+        const contractwithsigner = contract.connect(signer);
+        const resp = await contractwithsigner.getTotalMints();
+        const mints = resp.toNumber()
+        setMints(mints);
+        const all_accounts = await contractwithsigner.getAccounts();
+        setAccounts(all_accounts);
+        let scores = [];
+        let curr_mints = 0;
+        let curr_endorsements = 0;
+        let total_acc_score = 0;
+        for(let i = 0; i<all_accounts.length; i++){
+            const sbt_score = await contractwithsigner.total_sbt_received_in_account(all_accounts[i]);
+            const endorsement_score = await contractwithsigner.getEndorsements(all_accounts[i]);
+            scores.push(sbt_score.toNumber()+endorsement_score.toNumber());
+            console.log(account, all_accounts[i]);
+            if(all_accounts[i] === account){
+              curr_mints = sbt_score.toNumber();
+              curr_endorsements = endorsement_score.toNumber();
+              console.log('acg', curr_mints, curr_endorsements);
+              total_acc_score = curr_mints+curr_endorsements;
+            }
+        }
+        setReputationScore(scores);
+        console.log(all_accounts);
+        console.log(scores);
+        // Generate an array of random background colors
+        const randombg = Array.from({ length: all_accounts.length }, () => randomColor());
+        setRandomBg(randombg);
+        setGraph(true);
+        setReputation({cur_mints: curr_mints, cur_endorsements: curr_endorsements, total_score: total_acc_score});
+        console.log(curr_mints, currReputation.cur_mints);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <div className="home-container">
       <Helmet>
-        <title>Portfolio</title>
+        <title>Home</title>
         <meta property="og:title" content="Dashboard" />
       </Helmet>
       <header data-thq="thq-navbar" className="home-navbar">
-      <span className="home-logo"><a  href="/">
+        <span className="home-logo"><a  href="/">
               DeCAT
             </a></span>
         <div
@@ -121,11 +119,12 @@ const Portfolio = () => {
             data-role="Nav"
             className="home-nav"
           >
+            
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
-            <a href="/" className="home-button2 button-clean button">
-              Home
+            <a href="/portfolio" className="home-button2 button-clean button">
+              Portfolio
             </a>
             <a href="/reputation" className="home-button2 button-clean button">
               Reputation
@@ -134,10 +133,25 @@ const Portfolio = () => {
         </div>
         <div data-thq="thq-navbar-btn-group" className="home-btn-group">
           <div className="home-socials">
+            <button className="social button">
+              <img
+                alt="image"
+                src="/Icons/twitter.svg"
+                className="home-image"
+              />
+            </button>
+            <button className="social button">
+              <img
+                alt="image"
+                src="/Icons/discord.svg"
+                className="home-image01"
+              />
+            </button>
           </div>
-          
+          <button onClick={!isConnected && connectWallet} className="button">
+            {connectmsg}
+          </button>
         </div>
-        
         <div data-thq="thq-burger-menu" className="home-burger-menu">
           <button className="button home-button5">
             <svg viewBox="0 0 1024 1024" className="home-icon">
@@ -164,10 +178,10 @@ const Portfolio = () => {
               data-role="Nav"
               className="home-nav2"
             >
-              
             <a href="/multiple" className="home-button2 button-clean button">
               Multiple Transaction
             </a>
+
             </nav>
             <div className="home-container2">
               <button className="home-login button">Login</button>
@@ -187,12 +201,6 @@ const Portfolio = () => {
           </div>
         </div>
       </header>
-      <div className="home-hero">
-      <label className='home-button7 button'>Total DeCAT NFT's Minted: {address_mints}
-      </label>
-      </div>
-      
-      
       <section className="home-hero">
         <div className="home-heading">
           <h1 className="home-header">Leveraging Modified Soul Bound Tokens</h1>
@@ -202,43 +210,63 @@ const Portfolio = () => {
           </p>
         </div>
         <div className="home-buttons">
-          {/* <button onClick={!isConnected && connectWallet} className="button">
+          <button onClick={!isConnected && connectWallet} className="button">
             {connectmsg}
-          </button> */}
-          <button className="home-learn button-clean button">Learn more</button>
+          </button>
         </div>
-
-    <div class="home-hero">
-      <label className='home-button7 button'>Total NFT's Received from DeCAT: {address_mints}
-      </label>
-    </div>
-
-    <form onSubmit={getNFT}>
-      <div className="home-buttons" style={{width: 300}}>
-        <label className='home-links' style={{color: "white"}}>Wallet Address</label>
-         <input type="text" id="walletaddress" style={{width: 300}} className="button"></input>
-         <br></br><br></br>
-         <button type="submit" className='home-button6 button'>Get NFT</button>
-         {loader && <div><label className='home-links' style={{color: "white"}}>Fetching SBT...</label><div className="loader"></div></div>}
-      </div>
-    </form>
-
-    <div className="home-container">
-        <ul className="flex-container">{fetched_nftdata && 
-        nft_data.map(nft => (
-        <>
-          <div className="home-card" style={{width: 700}}>
-          <li className="home-paragraph">{nft.name}: <br></br>{nft.description}
-          <img src={nft.image} className="home-image06" ></img>
-          </li>
-          <br></br>
-          </div>
-        </>
-        ))}
-        </ul>
-    </div>
-
       </section>
+      {isConnected && <label className='home-button7 button'>Total DeCAT NFT's Minted: {totalmints}
+      </label>}
+      {isConnected && <label className='home-button7 button'>Total SBT's received in your Account: {currReputation.cur_mints}
+      </label>}
+      {isConnected && <label className='home-button7 button'>Total SBT's endorsed to your Account: {currReputation.cur_endorsements}
+      </label>}
+      {isConnected && <label className='home-button7 button'>Total Reputation Score: {currReputation.total_score}
+      </label>} <br></br>
+      <span className="home-logo">Reputation Chart</span>
+      <div className="home-hero">
+      {showGraph &&  
+        <span className="home-logo">Reputation Chart</span> &&
+        <Bar
+      data={{ 
+        // Name of the variables on x-axies for each bar 
+        labels: accounts, 
+        datasets: [ 
+          { 
+            label: "Accounts", 
+            // Data or value of your each variable 
+            data: reputation_score, 
+            // Color of each bar 
+            backgroundColor: randomBgcolor, 
+            // Border color of each bar 
+            borderColor: 'rgba(0, 0, 0, 1)', 
+            borderWidth: 1.5, 
+          }, 
+        ], 
+      }} 
+      // Height of graph 
+      height={400} 
+      width={2000}
+      options={{ 
+        maintainAspectRatio: false, 
+        scales: { 
+          yAxes: [ 
+            { 
+              ticks: { 
+                // The y-axis value will start from zero 
+                beginAtZero: true, 
+              }, 
+            }, 
+          ], 
+        }, 
+        legend: { 
+          labels: { 
+            fontSize: 20, 
+          }, 
+        }, 
+      }} 
+    /> }
+    </div>
       <section className="home-description">
         <img
           alt="image"
@@ -260,108 +288,7 @@ const Portfolio = () => {
                 which plays a critical role in multibatch transactions.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-      <section className="home-cards">
-        <div className="home-row">
-          <div className="home-card">
-            <div className="home-avatar">
-              <img
-                alt="image"
-                src="/Avatars/avatar.svg"
-                className="home-avatar1"
-              />
-            </div>
-            <div className="home-main">
-              <div className="home-content01">
-                <h2 className="home-header01">
-                  70% of the Certificates are web2 based or paper based
-                </h2>
-                <p className="home-description02">
-                  The project aims to tackle the problem of secure credential
-                  verification using SoulBound NFTs in a decentralized manner.
-                  By creating a Dapp with features for issuers to mint, manage,
-                  and verify NFTs, we intend to revolutionize how certificates
-                  and achievements are showcased and verified, enhancing their
-                  value and authenticity in the digital world.
-                </p>
-              </div>
-              <button className="home-learn1 button">
-                <span className="home-text07">Learn more</span>
-                <img
-                  alt="image"
-                  src="/Icons/arrow.svg"
-                  className="home-image02"
-                />
-              </button>
-            </div>
-          </div>
-          <div className="home-card01">
-            <div className="home-avatar2">
-              <img
-                alt="image"
-                src="/Avatars/default-avatar.svg"
-                className="home-avatar3"
-              />
-            </div>
-            <div className="home-main1">
-              <div className="home-content02">
-                <h2 className="home-header02">
-                  DeCAT : provides digital and decentralized certification
-                  authority
-                </h2>
-                <p className="home-description03">
-                  ensuring the authenticity and uniqueness of certificates,
-                  achievements, and credentials has become a critical concern.
-                  Traditional methods are susceptible to duplication and
-                  tampering, diminishing the value of these accolades. To
-                  address this issue, we aim to create a decentralized
-                  application (Dapp) that leverages modified ERC721 tokens
-                  inspired by SoulBound Tokens.
-                </p>
-              </div>
-              <button className="home-learn2 button">
-                <span className="home-text08">Learn more</span>
-                <img
-                  alt="image"
-                  src="/Icons/arrow-2.svg"
-                  className="home-image03"
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="home-card02">
-          <div className="home-avatar4">
-            <img
-              alt="image"
-              src="/Avatars/light-avatar.svg"
-              className="home-avatar5"
-            />
-          </div>
-          <div className="home-row1">
-            <div className="home-main2">
-              <div className="home-content03">
-                <h2 className="home-header03">
-                  Dive Deep into the world of Blockchain
-                </h2>
-                <p className="home-description04">
-                  Learn about Rollup mechanism, Layer protocols in Blockchain,
-                  Multi batch and bulk transaction processing and many more
-                  research things.
-                </p>
-              </div>
-              <button className="home-learn3 button">
-                <span className="home-text09">Learn more</span>
-                <img
-                  alt="image"
-                  src="/Icons/arrow-2.svg"
-                  className="home-image04"
-                />
-              </button>
-            </div>
-            <img alt="image" src="/group%202262.svg" className="home-image05" />
+            
           </div>
         </div>
       </section>
@@ -482,4 +409,4 @@ const Portfolio = () => {
   );
 };
 
-export default Portfolio;
+export default ReputationSystem;

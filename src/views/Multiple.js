@@ -267,7 +267,9 @@ const Multiple = () => {
                   <a href="/portfolio" className="home-button2 button-clean button">
                     Portfolio
                   </a>
-
+                  <a href="/reputation" className="home-button2 button-clean button">
+                    Reputation
+                  </a>
                 </nav>
                 <div className="home-container2">
                   <button className="home-login button">Login</button>
